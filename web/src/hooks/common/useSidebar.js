@@ -28,6 +28,10 @@ const sidebarEventTarget = new EventTarget();
 const SIDEBAR_REFRESH_EVENT = 'sidebar-refresh';
 
 export const DEFAULT_ADMIN_CONFIG = {
+  video: {
+    enabled: true,
+    'minimax-h3': true,
+  },
   chat: {
     enabled: true,
     playground: true,

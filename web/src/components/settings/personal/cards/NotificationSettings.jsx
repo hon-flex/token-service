@@ -45,6 +45,7 @@ import { StatusContext } from '../../../../context/Status';
 import { UserContext } from '../../../../context/User';
 import { useUserPermissions } from '../../../../hooks/common/useUserPermissions';
 import {
+  DEFAULT_ADMIN_CONFIG,
   mergeAdminConfig,
   useSidebar,
 } from '../../../../hooks/common/useSidebar';
@@ -64,6 +65,7 @@ const NotificationSettings = ({
   const [sidebarLoading, setSidebarLoading] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState('notification');
   const [sidebarModulesUser, setSidebarModulesUser] = useState({
+    video: { ...DEFAULT_ADMIN_CONFIG.video },
     chat: {
       enabled: true,
       playground: true,
@@ -157,6 +159,7 @@ const NotificationSettings = ({
 
   const resetSidebarModules = () => {
     const defaultConfig = {
+      video: { ...DEFAULT_ADMIN_CONFIG.video },
       chat: { enabled: true, playground: true, chat: true },
       console: {
         enabled: true,
@@ -246,6 +249,14 @@ const NotificationSettings = ({
 
   // 区域配置数据（根据权限过滤）
   const sectionConfigs = [
+    {
+      key: 'video',
+      title: t('视频'),
+      description: t('模型服务'),
+      modules: [
+        { key: 'minimax-h3', title: 'minimax-h3', description: 'StarFilm AI' },
+      ],
+    },
     {
       key: 'chat',
       title: t('聊天区域'),

@@ -40,3 +40,6 @@ redis_data/
 scripts/
 .codegraph/
 output/
+
+docs/前后端文件职责索引.md
+docs/项目前后端架构与二开指南.md

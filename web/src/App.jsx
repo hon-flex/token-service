@@ -30,6 +30,7 @@ import {
 import { StatusContext } from './context/Status';
 import SetupCheck from './components/layout/SetupCheck';
 
+const MinimaxH3 = lazy(() => import('./pages/MinimaxH3'));
 const Home = lazy(() => import('./pages/Home'));
 const User = lazy(() => import('./pages/User'));
 const RegisterForm = lazy(() => import('./components/auth/RegisterForm'));
@@ -204,6 +205,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Token />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path='/console/video/models/minimax-h3'
+            element={
+              <PrivateRoute>
+                <MinimaxH3 />
               </PrivateRoute>
             }
           />

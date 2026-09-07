@@ -60,6 +60,7 @@ const routerMap = {
   deployment: '/console/deployment',
   'model-heat': '/console/model-heat',
   playground: '/console/playground',
+  'minimax-h3': '/console/video/models/minimax-h3',
   personal: '/console/personal',
   'real-name-verification': '/console/real-name-verification',
   invoice: '/console/invoice',
@@ -184,11 +185,7 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
         itemKey: 'personal',
         to: '/personal',
       },
-      {
-        text: t('智能路由'),
-        itemKey: 'route_policy',
-        to: '/route-policy',
-      },
+      // 用户二开：隐藏智能路由策略入口。
       {
         text: t('SD 素材库'),
         itemKey: 'seedance-material',
@@ -402,11 +399,11 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
         itemKey: 'playground',
         to: '/playground',
       },
-      {
-        text: t('聊天'),
-        itemKey: 'chat',
-        items: chatItems,
-      },
+      // {
+      //   text: t('聊天'),
+      //   itemKey: 'chat',
+      //   items: chatItems,
+      // },
     ];
 
     // 根据配置过滤项目
@@ -486,6 +483,14 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
     // 如果找到匹配的键，更新选中的键
     if (matchingKey) {
       setSelectedKeys([matchingKey]);
+    }
+
+    if (matchingKey === 'minimax-h3') {
+      setOpenedKeys((prev) =>
+        prev.includes('video-model-services')
+          ? prev
+          : [...prev, 'video-model-services'],
+      );
     }
 
     // 供应商子菜单：进入申请/渠道/定价页时展开父级，便于看到当前选中项
@@ -655,6 +660,24 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
               {chatMenuItems.map((item) => renderSubItem(item))}
             </div>
           )}
+
+          {/* 视频区域 */}
+          {hasSectionVisibleModules('video') &&
+            isModuleVisible('video', 'minimax-h3') && (
+              <>
+                <Divider className='sidebar-divider' />
+                <div className='sidebar-section'>
+                  {!collapsed && (
+                    <div className='sidebar-group-label'>{t('视频')}</div>
+                  )}
+                  {renderSubItem({
+                    text: t('模型服务'),
+                    itemKey: 'video-model-services',
+                    items: [{ text: 'minimax-h3', itemKey: 'minimax-h3' }],
+                  })}
+                </div>
+              </>
+            )}
 
           {/* 控制台区域 */}
           {hasSectionVisibleModules('console') && (

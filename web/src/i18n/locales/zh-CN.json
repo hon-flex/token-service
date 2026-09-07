@@ -1,5 +1,6 @@
 {
   "translation": {
+    "模型服务": "模型服务",
     " + 图片生成调用 {{symbol}}{{price}} / 1次": " + 图片生成调用 {{symbol}}{{price}} / 1次",
     " + 图片生成调用 {{symbol}}{{price}} / 1次 * {{ratioType}} {{ratio}}": " + 图片生成调用 {{symbol}}{{price}} / 1次 * {{ratioType}} {{ratio}}",
     " + 文件搜索 {{count}}次 / 1K 次 * {{symbol}}{{price}}": " + 文件搜索 {{count}}次 / 1K 次 * {{symbol}}{{price}}",

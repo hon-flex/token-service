@@ -1,6 +1,7 @@
 {
   "视频生成": "Tạo video",
   "translation": {
+    "模型服务": "Dịch vụ mô hình",
     " ": " ",
     " + 图片生成调用 {{symbol}}{{price}} / 1次": " + Image generation {{symbol}}{{price}} / call",
     " + 图片生成调用 {{symbol}}{{price}} / 1次 * {{ratioType}} {{ratio}}": " + Gọi tạo hình ảnh {{symbol}}{{price}} / 1 lần * {{ratioType}} {{ratio}}",

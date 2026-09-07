@@ -78,6 +78,7 @@ const PageLayout = () => {
     '/console/supplier-application',
     '/console/suppliers',
     '/console/playground',
+    '/console/video/models/minimax-h3',
     '/pricing',
     '/rankings',
     '/compute',
@@ -95,7 +96,8 @@ const PageLayout = () => {
     location.pathname.includes('/console') &&
     !location.pathname.startsWith('/console/chat') &&
     location.pathname !== '/console/playground' &&
-    location.pathname !== '/console/real-name-verification';
+    location.pathname !== '/console/real-name-verification' &&
+    location.pathname !== '/console/video/models/minimax-h3';
 
   const isConsoleRoute = location.pathname.startsWith('/console');
   const showSider = isConsoleRoute && (!isMobile || drawerOpen);

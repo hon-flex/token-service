@@ -30,6 +30,7 @@ import {
 } from '@douyinfe/semi-ui';
 import { API, showSuccess, showError } from '../../../helpers';
 import { StatusContext } from '../../../context/Status';
+import { DEFAULT_ADMIN_CONFIG } from '../../../hooks/common/useSidebar';
 
 const { Text } = Typography;
 
@@ -40,6 +41,7 @@ export default function SettingsSidebarModulesAdmin(props) {
 
   // 左侧边栏模块管理状态（管理员全局控制）
   const [sidebarModulesAdmin, setSidebarModulesAdmin] = useState({
+    video: { ...DEFAULT_ADMIN_CONFIG.video },
     chat: {
       enabled: true,
       playground: true,
@@ -116,6 +118,7 @@ export default function SettingsSidebarModulesAdmin(props) {
   // 重置为默认配置
   function resetSidebarModules() {
     const defaultModules = {
+      video: { ...DEFAULT_ADMIN_CONFIG.video },
       chat: {
         enabled: true,
         playground: true,
@@ -203,10 +206,14 @@ export default function SettingsSidebarModulesAdmin(props) {
     if (props.options && props.options.SidebarModulesAdmin) {
       try {
         const modules = JSON.parse(props.options.SidebarModulesAdmin);
-        setSidebarModulesAdmin(modules);
+        setSidebarModulesAdmin({
+          ...modules,
+          video: { ...DEFAULT_ADMIN_CONFIG.video, ...modules.video },
+        });
       } catch (error) {
         // 使用默认配置
         const defaultModules = {
+          video: { ...DEFAULT_ADMIN_CONFIG.video },
           chat: { enabled: true, playground: true, chat: true },
           console: {
             enabled: true,
@@ -251,6 +258,14 @@ export default function SettingsSidebarModulesAdmin(props) {
 
   // 区域配置数据
   const sectionConfigs = [
+    {
+      key: 'video',
+      title: t('视频'),
+      description: t('模型服务'),
+      modules: [
+        { key: 'minimax-h3', title: 'minimax-h3', description: 'StarFilm AI' },
+      ],
+    },
     {
       key: 'chat',
       title: t('聊天区域'),

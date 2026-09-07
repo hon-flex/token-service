@@ -1,6 +1,7 @@
 {
   "视频生成": "動画生成",
   "translation": {
+    "模型服务": "モデルサービス",
     " ": " ",
     " + 图片生成调用 {{symbol}}{{price}} / 1次": " + 画像生成 {{symbol}}{{price}} / 1回",
     " + 图片生成调用 {{symbol}}{{price}} / 1次 * {{ratioType}} {{ratio}}": " + 画像生成APIコール {{symbol}}{{price}} / 1回 * {{ratioType}} {{ratio}}",

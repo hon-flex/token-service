@@ -94,7 +94,7 @@ const HeaderLogo = ({
             alt={`${systemName} logo`}
             width={32}
             height={32}
-            className={`absolute inset-0 h-full w-full rounded-full transition-[transform,opacity] duration-200 group-hover:scale-110 ${!isLoading && logoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 h-full w-full transition-[transform,opacity] duration-200 group-hover:scale-110 ${!isLoading && logoLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
         </div>
         <div className='flex min-w-0 items-center gap-2'>

@@ -185,6 +185,7 @@ export function getLucideIcon(key, selected = false) {
     case 'seedance-material':
       return <ImageIcon {...commonProps} color={iconColor} />;
     case 'models':
+    case 'video-model-services':
       return <Package {...commonProps} color={iconColor} />;
     case 'deployment':
       return <Server {...commonProps} color={iconColor} />;
