@@ -334,28 +334,28 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
         to: '/console/distributor/admin',
         className: isAdmin() ? '' : 'tableHiddle',
       },
-      {
-        text: t('供应商管理'),
-        itemKey: 'supplier-management',
-        className: isAdmin() ? '' : 'tableHiddle',
-        items: [
-          {
-            text: t('申请审批'),
-            itemKey: 'supplier-application-approval',
-            to: '/console/supplier-application',
-          },
-          {
-            text: t('供应商列表'),
-            itemKey: 'supplier-list',
-            to: '/console/suppliers',
-          },
-          {
-            text: t('数据看板'),
-            itemKey: 'supplier-dashboard',
-            to: '/console/supplier/dashboard',
-          },
-        ],
-      },
+      // {
+      //   text: t('供应商管理'),
+      //   itemKey: 'supplier-management',
+      //   className: isAdmin() ? '' : 'tableHiddle',
+      //   items: [
+      //     {
+      //       text: t('申请审批'),
+      //       itemKey: 'supplier-application-approval',
+      //       to: '/console/supplier-application',
+      //     },
+      //     {
+      //       text: t('供应商列表'),
+      //       itemKey: 'supplier-list',
+      //       to: '/console/suppliers',
+      //     },
+      //     {
+      //       text: t('数据看板'),
+      //       itemKey: 'supplier-dashboard',
+      //       to: '/console/supplier/dashboard',
+      //     },
+      //   ],
+      // },
       {
         text: t('系统设置'),
         itemKey: 'setting',
@@ -665,7 +665,7 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
             </div>
           )}
 
-          {/* 视频区域 */}
+          {/* 视频区域：暂时隐藏 minimax-h3 菜单入口。
           {hasSectionVisibleModules('video') &&
             isModuleVisible('video', 'minimax-h3') && (
               <>
@@ -682,6 +682,7 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
                 </div>
               </>
             )}
+          */}
 
           {/* 控制台区域 */}
           {hasSectionVisibleModules('console') && (
