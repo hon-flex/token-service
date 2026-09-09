@@ -839,6 +839,12 @@ export function getUsedGroupContext(record, selectedGroup, groupRatio) {
       usedGroupRatio = 1;
     }
   }
+  // 用户指定价已由 /api/pricing 按实际计费规则写入渠道价格，且计费时不再叠加分组倍率。
+  // 展示层统一将该模型的分组倍率视为 1，避免模型广场重复打折。
+  if (record?.user_pricing_applied === true) {
+    usedGroupRatio = 1;
+  }
+
   return { usedGroup, usedGroupRatio };
 }
 

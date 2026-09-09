@@ -460,7 +460,7 @@ const PageLayout = () => {
           >
             <App />
           </Content>
-          {!shouldHideFooter && (
+          {/* {!shouldHideFooter && (
             <Layout.Footer
               style={{
                 flex: '0 0 auto',
@@ -471,7 +471,7 @@ const PageLayout = () => {
                 <FooterBar />
               </Suspense>
             </Layout.Footer>
-          )}
+          )} */}
         </Layout>
       </Layout>
       <StickyTableScrollbar />

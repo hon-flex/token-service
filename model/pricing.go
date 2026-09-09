@@ -119,10 +119,11 @@ type PricingChannelItem struct {
 // PricingAPIItem 在 Pricing 基础上扩展渠道维度统计字段（定价接口 data 元素类型）。
 type PricingAPIItem struct {
 	Pricing
-	SupplierList      []PricingSupplierItem     `json:"supplier_list"`
-	ChannelList       []PricingChannelItem      `json:"channel_list"`
-	VideoFlatClipHint *VideoFlatClipPricingHint `json:"video_flat_clip_hint,omitempty"`
-	ImagePerImageHint *ImagePerImagePricingHint `json:"image_per_image_hint,omitempty"`
+	SupplierList       []PricingSupplierItem     `json:"supplier_list"`
+	ChannelList        []PricingChannelItem      `json:"channel_list"`
+	VideoFlatClipHint  *VideoFlatClipPricingHint `json:"video_flat_clip_hint,omitempty"`
+	ImagePerImageHint  *ImagePerImagePricingHint `json:"image_per_image_hint,omitempty"`
+	UserPricingApplied bool                      `json:"user_pricing_applied,omitempty"`
 }
 
 func resolveChannelPricingTriple(channelID int, supplierApplicationID int, modelName string) (mp, mr, cr float64) {

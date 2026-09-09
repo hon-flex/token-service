@@ -125,7 +125,7 @@ const HeaderLogo = ({
           </div>
         </div>
       </Link>
-      {showSupplierApply && (
+      {/* {showSupplierApply && (
         <div className='hidden flex-shrink-0 items-center gap-2 min-[1600px]:flex'>
           <Link
             to={supplierTo}
@@ -135,7 +135,7 @@ const HeaderLogo = ({
             {t('提供算力')}
           </Link>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

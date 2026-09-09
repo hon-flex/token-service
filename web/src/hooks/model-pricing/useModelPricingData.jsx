@@ -177,6 +177,9 @@ const mergeModelsByName = (models) => {
       tags: mergeTags(sameNameModels),
       video_flat_clip_hint: cheapestChannel?.video_flat_clip_hint,
       image_per_image_hint: cheapestChannel?.image_per_image_hint,
+      user_pricing_applied: sameNameModels.some(
+        (model) => model?.user_pricing_applied === true,
+      ),
     };
   });
 };

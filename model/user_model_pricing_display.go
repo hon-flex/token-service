@@ -91,6 +91,7 @@ func ApplyUserPricingOverrideToPricingAPI(userId int, pricingData []PricingAPIIt
 			item.ImagePerImageHint = BuildImagePerImageHint(ch.ChannelID, modelName, effCostOv, markupOv)
 		}
 		if !hide {
+			item.UserPricingApplied = true
 			out = append(out, item)
 		}
 	}

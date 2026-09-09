@@ -185,7 +185,11 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
         itemKey: 'personal',
         to: '/personal',
       },
-      // 用户二开：隐藏智能路由策略入口。
+      {
+        text: t('智能路由'),
+        itemKey: 'route_policy',
+        to: '/route-policy',
+      },
       {
         text: t('SD 素材库'),
         itemKey: 'seedance-material',
