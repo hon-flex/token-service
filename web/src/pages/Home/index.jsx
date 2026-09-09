@@ -382,13 +382,13 @@ const Home = () => {
             )}
           </div>
         )}
-        <Suspense fallback={null}>
+        {/* <Suspense fallback={null}>
           <HomeFooterCertificates
             enabled={statusState?.status?.home_footer_certificates_enabled}
             rawCertificates={statusState?.status?.home_footer_certificates}
           />
           <FooterBar />
-        </Suspense>
+        </Suspense> */}
       </div>
     </>
   );
