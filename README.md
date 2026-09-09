@@ -292,6 +292,92 @@ Welcome all forms of contribution!
 
 ---
 
+## 项目 Git 提交规范
+
+### 远程仓库与分支
+
+本项目开发环境约定使用以下远程名称；首次开发前执行 `git remote -v` 核对地址。
+
+| 名称 | 仓库地址或跟踪关系 | 用途 |
+| --- | --- | --- |
+| `origin` | `http://192.168.2.144/platform/token-factory.git` | 公司仓库，日常提交与合并目标 |
+| `upstream` | `https://github.com/fyinfor/token-factory.git` | GitHub 同步来源 |
+| `origin/main` | 公司仓库的远程 main | 公司主分支 |
+| `upstream/main` | GitHub 仓库的远程 main | GitHub 主分支 |
+| `main` | 本地分支，跟踪 `origin/main` | 在本地查看、同步公司主分支 |
+
+这里的 `upstream` 是 Git remote 别名；项目原始来源及归属仍以本文的 Upstream、Lineage 和 License 说明为准。
+
+本项目约定本地 `main` 跟踪公司 `origin/main`，使用 `git branch -vv` 核对跟踪关系；GitHub 主分支使用 `upstream/main` 区分。日常开发推送到 `origin`；本地与远程分支同名且跟踪关系正确时，可直接使用 `git push`。
+
+### 切换与创建开发分支
+
+切换前先执行 `git status`，将当前修改提交到所属开发分支，或使用 `git stash push -u` 暂存，避免把未完成的修改带到其他分支。暂存的修改应回到原开发分支后再恢复。
+
+首次创建本地公司主分支：
+
+```bash
+git fetch origin
+git switch -c main --track origin/main
+```
+
+如果本地 `main` 已存在，切换、确认跟踪公司仓库并同步：
+
+```bash
+git fetch origin
+git switch main
+git branch --set-upstream-to=origin/main main
+git pull --ff-only origin main
+```
+
+从最新公司主分支创建功能分支，命名采用 `feature/<姓名缩写>-<日期>-<功能>`，例如：
+
+```bash
+git switch -c feature/lyj-0909-route-policy
+```
+
+现有开发分支可直接切换，例如 `git switch feature/lyj-0907-init`。日常修改在功能分支完成，通过公司仓库的合并请求进入 `main`。
+
+### 提交与推送
+
+每次提交只包含同一目的的修改。提交前检查差异，运行与修改相关的检查；前端使用 Bun，例如 `cd web && bun run build`。不要提交密钥、本地环境配置或无关生成文件。
+
+提交信息采用 `<类型>: <具体说明>`，常用类型为 `feat`（功能）、`fix`（修复）、`docs`（文档）、`refactor`（重构）、`chore`（维护）。说明应描述实际修改，避免只写 `update` 或 `init`。
+
+以下以提交本 README 到 `feature/lyj-0907-init` 为例，在项目根目录执行，并按实际修改选择暂存文件：
+
+```bash
+git branch --show-current
+git status
+git diff
+git add README.md
+git diff --cached
+git commit -m "docs: 补充公司仓库 Git 提交规范"
+git push -u origin feature/lyj-0907-init
+```
+
+执行示例前确认当前分支为 `feature/lyj-0907-init`；使用其他功能分支时替换推送命令中的分支名。后续推送可使用 `git push origin feature/lyj-0907-init`。
+
+在公司仓库创建合并请求：源分支选择自己的功能分支，目标选择 `main`。说明修改目的和验证结果，经评审后合并。不要向共享主分支强制推送；需要同步 GitHub 更新时，单独在集成分支处理并评审。
+
+### 本地合并到公司 main
+
+公司仓库允许直接推送且修改已完成评审时，也可在本地合并后推送。先提交工作区修改，再执行：
+
+```bash
+git switch main
+git pull --ff-only origin main
+git merge feature/lyj-0907-init
+git push origin main
+```
+
+本地 `main` 已跟踪 `origin/main` 时，最后一条也可写为 `git push`。如果合并发生冲突，解决冲突并完成合并提交后再推送。
+
+- 分支名前缀为 `feature/`，不要写成 `featrure/`；可用 `git branch --list` 核对名称。
+- `Already up to date.` 表示当前分支已包含待合并分支的所有提交，不代表这些提交已推送。
+- `git push` 只推送提交；README 等文件的未提交修改须先 `git add`、`git commit`。
+- 如果提示本地与跟踪分支名称不一致，使用 `git branch -vv` 检查。本项目公司主分支应显示为 `main ... [origin/main]`。
+
 ## License
 
 This project (**TokenFactory**) is licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](./LICENSE). Modifications and further derivatives remain under **AGPL-3.0** unless you obtain a separate commercial license from the copyright holders.
