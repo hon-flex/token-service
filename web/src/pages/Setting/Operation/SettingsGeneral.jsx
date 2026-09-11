@@ -46,12 +46,12 @@ const { Text } = Typography;
 const FORM_INPUT_DEFAULTS = {
   TopUpLink: '',
   'general_setting.docs_link': '',
-  'general_setting.quota_display_type': 'USD',
+  'general_setting.quota_display_type': 'CNY',
   'general_setting.custom_currency_symbol': '¤',
   'general_setting.custom_currency_exchange_rate': '',
   QuotaPerUnit: '',
   RetryTimes: '',
-  USDExchangeRate: '',
+  USDExchangeRate: '1',
   RegisterEnabled: true,
   DisplayTokenStatEnabled: false,
   DefaultCollapseSidebar: false,
@@ -117,7 +117,7 @@ export default function GeneralSettings(props) {
         showSuccess(t('保存成功'));
         const statusPatch = {
           quota_display_type:
-            inputs['general_setting.quota_display_type'] || 'USD',
+            inputs['general_setting.quota_display_type'] || 'CNY',
           quota_per_unit: inputs.QuotaPerUnit,
           usd_exchange_rate: inputs.USDExchangeRate,
           custom_currency_symbol:
@@ -215,9 +215,8 @@ export default function GeneralSettings(props) {
 
   const rateExtraText = useMemo(() => {
     if (quotaDisplayType === 'CNY')
-      return t(
-        '系统内部以美元 (USD) 为基准计价。用户余额、充值金额、模型定价、用量日志等所有金额显示均按此汇率换算为人民币，不影响内部计费',
-      );
+      // return t('额度以人民币 (CNY) 展示，固定按 1 USD = 1 CNY 换算。');
+      return t('额度以人民币 (CNY) 展示');
     if (quotaDisplayType === 'TOKENS')
       return t(
         '系统内部计费精度，默认 500000，修改可能导致计费异常，请谨慎操作',
@@ -273,8 +272,11 @@ export default function GeneralSettings(props) {
       currentInputs['general_setting.custom_currency_exchange_rate'] =
         props.options['general_setting.custom_currency_exchange_rate'];
     }
-    setInputs(currentInputs);
+    // 保留服务端原值用于比较，保存时将旧配置更新为固定币种和汇率。
     setInputsRow(structuredClone(currentInputs));
+    currentInputs['general_setting.quota_display_type'] = 'CNY';
+    currentInputs.USDExchangeRate = '1';
+    setInputs(currentInputs);
     refForm.current.setValues(currentInputs);
   }, [props.options]);
 
@@ -376,6 +378,7 @@ export default function GeneralSettings(props) {
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
                 <Form.Select
                   field='general_setting.quota_display_type'
+                  disabled
                   label={t('额度展示类型')}
                   extraText={quotaDisplayTypeDesc}
                   onChange={handleFieldChange(
@@ -398,7 +401,8 @@ export default function GeneralSettings(props) {
                 <Col xs={24} sm={12} md={8} lg={8} xl={8}>
                   <Form.Slot label={rateLabel}>
                     <Input
-                      prefix='1 USD = '
+                      disabled
+                      // prefix='1 USD = '
                       suffix={rateSuffix}
                       value={combinedRate}
                       onChange={onCombinedRateChange}
@@ -438,11 +442,11 @@ export default function GeneralSettings(props) {
                   showClear
                 />
               </Col>
-              <Col span={24}>
+              {/* <Col span={24}>
                 <Text type='tertiary' size='small'>
                   {t('预览效果')}：{previewText}
                 </Text>
-              </Col>
+              </Col> */}
             </Row>
             <Row gutter={16}>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
