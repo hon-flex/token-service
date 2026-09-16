@@ -59,6 +59,7 @@ var channelAllowedSupplierTypes = map[string]struct{}{
 	"AIDC":  {},
 	"企业中转站": {},
 	"个人中转站": {},
+	"燧弘华创":  {},
 }
 
 // defaultChannelSupplierType 当渠道行与关联供应商申请均未提供 supplier_type 时的兜底值（须为 channelAllowedSupplierTypes 之一）。

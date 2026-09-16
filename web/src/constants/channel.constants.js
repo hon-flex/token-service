@@ -24,6 +24,7 @@ export const CHANNEL_SUPPLIER_TYPE_OPTIONS = [
   { label: 'AIDC', value: 'AIDC' },
   { label: '企业中转站', value: '企业中转站' },
   { label: '个人中转站', value: '个人中转站' },
+  { label: '燧弘华创', value: '燧弘华创' },
 ];
 
 export const CHANNEL_OPTIONS = [
