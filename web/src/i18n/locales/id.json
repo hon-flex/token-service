@@ -1,6 +1,7 @@
 {
   "视频生成": "generasi video",
   "translation": {
+    "下载视频": "Unduh video",
     "模型服务": "Layanan Model",
     " ": " ",
     " + 图片生成调用 {{symbol}}{{price}} / 1次": " + Image generation {{symbol}}{{price}} / call",

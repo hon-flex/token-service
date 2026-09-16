@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -128,6 +129,9 @@ func normalizeChannelTestEndpoint(channel *model.Channel, modelName, endpointTyp
 	}
 	if channel != nil && channel.Type == constant.ChannelTypeCodex {
 		return string(constant.EndpointTypeOpenAIResponse)
+	}
+	if channel != nil && channel.Type == constant.ChannelTypeSora {
+		return string(constant.EndpointTypeOpenAIVideo)
 	}
 	if channel != nil && channel.Type == constant.ChannelTypeOpenAIVideo {
 		return string(constant.EndpointTypeOpenAIVideoGW)
@@ -879,10 +883,26 @@ func truncateForError(s string) string {
 	return s[:maxLen] + "...(truncated)"
 }
 
-// testChannelVideo 处理视频生成类端点（OpenAI Sora /v1/videos、外部视频网关 /v1/videos/generations、
-// TokenFactory 统一入口 /v1/video/generations 等）的渠道测试。
-// 视频生成是任务式异步接口，这里只验证上游能否正确创建任务（返回 task_id），不做轮询，
-// 避免长时间阻塞和测试期间产生真实视频生成费用。
+func encodeVideoTestBody(endpointType constant.EndpointType, fields map[string]any) ([]byte, string, error) {
+	if endpointType != constant.EndpointTypeOpenAIVideo {
+		body, err := common.Marshal(fields)
+		return body, "application/json", err
+	}
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	for key, value := range fields {
+		if err := writer.WriteField(key, fmt.Sprint(value)); err != nil {
+			return nil, "", err
+		}
+	}
+	if err := writer.Close(); err != nil {
+		return nil, "", err
+	}
+	return body.Bytes(), writer.FormDataContentType(), nil
+}
+
+// testChannelVideo 验证上游能否创建视频任务，不等待生成完成。
+// 提交会创建真实任务，上游仍可能生成视频并计费。
 func testChannelVideo(c *gin.Context, channel *model.Channel, testModel string, endpointType string, tik time.Time) testResult {
 	// TokenFactoryOpen(60) 指向上游 TokenFactory 时，真实路由是 /v1/video/generations，不是外部 Hidream 的 /v1/videos/generations。
 	if channel != nil && channel.Type == constant.ChannelTypeTokenFactoryOpen &&
@@ -929,6 +949,10 @@ func testChannelVideo(c *gin.Context, channel *model.Channel, testModel string, 
 			"prompt":  "a cute cat dancing in a sunny garden",
 			"size":    "720x1280",
 			"seconds": "4",
+		}
+		// Self-hosted H3 requires an explicit aspect ratio even when size is supplied.
+		if strings.EqualFold(upstreamModel, "minimax-h3") {
+			bodyMap["aspect_ratio"] = "9:16"
 		}
 	case constant.EndpointTypeTencentCloudVODVideo:
 		// 腾讯云官方 VOD 视频接口必须使用 TC3 签名和 X-TC-* 公共头，不能直接 Bearer 调上游。
@@ -1098,7 +1122,7 @@ func testChannelVideo(c *gin.Context, channel *model.Channel, testModel string, 
 		}
 	}
 
-	bodyBytes, err := common.Marshal(bodyMap)
+	bodyBytes, contentType, err := encodeVideoTestBody(constant.EndpointType(endpointType), bodyMap)
 	if err != nil {
 		return testResult{
 			context:           c,
@@ -1120,7 +1144,7 @@ func testChannelVideo(c *gin.Context, channel *model.Channel, testModel string, 
 		}
 	}
 	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
-	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Content-Type", contentType)
 	if constant.EndpointType(endpointType) == constant.EndpointTypeAliVideo {
 		httpReq.Header.Set("X-DashScope-Async", "enable")
 	}

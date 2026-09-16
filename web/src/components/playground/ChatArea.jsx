@@ -38,6 +38,8 @@ import { IconRefresh, IconUploadError } from '@douyinfe/semi-icons';
 import { MessageSquare, Eye, EyeOff, MessageSquarePlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import StableDialogueMarkdown from './StableDialogueMarkdown';
+import VideoDownloadButton from './VideoDownloadButton';
+import { getVideoTaskPlaybackUrl } from '../../helpers/videoTaskPlayback';
 import { usePlayground } from '../../contexts/PlaygroundContext';
 import { listMaterialAssets } from '../../helpers/materialApi';
 import {
@@ -257,13 +259,16 @@ const appendTextContent = (
   }
 };
 
-const normalizeDialogueContent = (
-  message,
-  assetMap,
-  hideReasoning = false,
-) => {
+const normalizeDialogueContent = (message, assetMap, hideReasoning = false) => {
   const { role, videoTask } = message || {};
-  const rawContent = message?.playgroundContent ?? message?.content;
+  const videoPlayableUrl = getVideoTaskPlaybackUrl(videoTask);
+  const savedContent = message?.playgroundContent ?? message?.content;
+  const rawContent =
+    videoPlayableUrl &&
+    typeof savedContent === 'string' &&
+    savedContent.startsWith('视频已生成完成。')
+      ? '视频已生成完成。'
+      : savedContent;
   const generatedImages = resolveMessageGeneratedImages(message);
   const normalizedContent = [];
   const reasoningContentRef = {
@@ -309,10 +314,10 @@ const normalizeDialogueContent = (
     });
   }
 
-  if (videoTask?.playableUrl) {
+  if (videoPlayableUrl) {
     normalizedContent.push({
       type: 'playground_video',
-      video_url: resolvePlaygroundMediaUrl(videoTask.playableUrl, assetMap),
+      video_url: resolvePlaygroundMediaUrl(videoPlayableUrl, assetMap),
       filename: 'generated-video.mp4',
     });
   }
@@ -831,6 +836,10 @@ const ChatArea = ({
                   nextDimensions,
                 );
               }}
+            />
+            <VideoDownloadButton
+              task={currentMessage?.videoTask}
+              videoUrl={videoUrl}
             />
           </div>
         );

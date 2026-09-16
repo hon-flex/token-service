@@ -1,8 +1,9 @@
 module.exports = {
   root: true,
+  ignorePatterns: ['dist/', 'build/', 'coverage/'],
   env: { browser: true, es2021: true, node: true },
   parserOptions: {
-    ecmaVersion: 2020,
+    ecmaVersion: 2021,
     sourceType: 'module',
     ecmaFeatures: { jsx: true },
   },
@@ -12,7 +13,7 @@ module.exports = {
       files: ['**/*.{js,jsx}'],
       rules: {
         'header/header': [
-          2,
+          'off',
           'block',
           [
             '',

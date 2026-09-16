@@ -37,6 +37,7 @@ import {
   normalizePlaygroundImageResponse,
 } from '../../helpers/playgroundImageUtils';
 import { formatVideoTaskError } from '../../helpers/playgroundVideoUtils';
+import { getVideoTaskPlaybackUrl } from '../../helpers/videoTaskPlayback';
 
 const TASK_POLL_INTERVAL_MS = 10000;
 const TASK_POLL_MAX_ATTEMPTS = 24;
@@ -258,7 +259,9 @@ export const useApiRequest = (
         const taskPayload = getVideoTaskPayload(data);
         const status = String(taskPayload?.status || '').toLowerCase();
         const progress = Number(taskPayload?.progress || 0);
-        const playable = extractVideoPlayableURL(data);
+        const playable =
+          extractVideoPlayableURL(data) ||
+          getVideoTaskPlaybackUrl({ taskId, status });
         const failedStatuses = ['failure', 'failed', 'error', 'cancelled'];
         console.debug('[playground-video] poll tick', {
           taskId,
@@ -828,10 +831,7 @@ export const useApiRequest = (
 
           const delta = payload.choices?.[0]?.delta;
           if (delta) {
-            if (
-              !hideReasoningRef.current &&
-              delta.reasoning_content
-            ) {
+            if (!hideReasoningRef.current && delta.reasoning_content) {
               streamMessageUpdate(
                 delta.reasoning_content,
                 'reasoning',

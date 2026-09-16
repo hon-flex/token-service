@@ -2,6 +2,7 @@ package sora
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -52,8 +53,8 @@ type responseTask struct {
 	Size               string `json:"size,omitempty"`
 	RemixedFromVideoID string `json:"remixed_from_video_id,omitempty"`
 	Error              *struct {
-		Message string `json:"message"`
-		Code    string `json:"code"`
+		Message string          `json:"message"`
+		Code    json.RawMessage `json:"code"` // Compatible providers return either a string or a number.
 	} `json:"error,omitempty"`
 }
 
@@ -158,6 +159,9 @@ func (a *TaskAdaptor) BuildRequestBody(c *gin.Context, info *relaycommon.RelayIn
 		var bodyMap map[string]interface{}
 		if err := common.Unmarshal(cachedBody, &bodyMap); err == nil {
 			bodyMap["model"] = info.UpstreamModelName
+			if strings.EqualFold(info.UpstreamModelName, "minimax-h3") && info.Action != constant.TaskActionRemix {
+				return buildH3Form(c, bodyMap)
+			}
 			if newBody, err := common.Marshal(bodyMap); err == nil {
 				return bytes.NewReader(newBody), nil
 			}
@@ -289,6 +293,59 @@ func (a *TaskAdaptor) GetModelList() []string {
 
 func (a *TaskAdaptor) GetChannelName() string {
 	return ChannelName
+}
+
+// buildH3Form translates the playground's JSON video parameters to the self-hosted H3 form API.
+func buildH3Form(c *gin.Context, fields map[string]interface{}) (io.Reader, error) {
+	if _, exists := fields["seconds"]; !exists {
+		if duration, ok := fields["duration"]; ok {
+			fields["seconds"] = duration
+		}
+	}
+	if _, exists := fields["aspect_ratio"]; !exists {
+		if metadata, ok := fields["metadata"].(map[string]interface{}); ok {
+			if ratio, ok := metadata["ratio"].(string); ok && ratio != "" && ratio != "adaptive" && ratio != "auto" {
+				fields["aspect_ratio"] = ratio
+			}
+		}
+	}
+	if _, exists := fields["aspect_ratio"]; !exists {
+		var width, height int
+		if size, ok := fields["size"].(string); ok {
+			if _, err := fmt.Sscanf(size, "%dx%d", &width, &height); err == nil && width > 0 && height > 0 {
+				a, b := width, height
+				for b != 0 {
+					a, b = b, a%b
+				}
+				fields["aspect_ratio"] = fmt.Sprintf("%d:%d", width/a, height/a)
+			}
+		}
+	}
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	for key, value := range fields {
+		if value == nil {
+			continue
+		}
+		var text string
+		if str, ok := value.(string); ok {
+			text = str
+		} else {
+			encoded, err := common.Marshal(value)
+			if err != nil {
+				return nil, err
+			}
+			text = string(encoded)
+		}
+		if err := writer.WriteField(key, text); err != nil {
+			return nil, err
+		}
+	}
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
+	c.Request.Header.Set("Content-Type", writer.FormDataContentType())
+	return bytes.NewReader(body.Bytes()), nil
 }
 
 func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, error) {

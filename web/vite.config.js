@@ -112,6 +112,10 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       allowedHosts: ['.trycloudflare.com'],
       proxy: {
+        '/v1': {
+          target: devProxyTarget,
+          changeOrigin: true,
+        },
         '/api': {
           target: devProxyTarget,
           changeOrigin: true,

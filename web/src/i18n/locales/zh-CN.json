@@ -1,5 +1,6 @@
 {
   "translation": {
+    "下载视频": "下载视频",
     "模型服务": "模型服务",
     " + 图片生成调用 {{symbol}}{{price}} / 1次": " + 图片生成调用 {{symbol}}{{price}} / 1次",
     " + 图片生成调用 {{symbol}}{{price}} / 1次 * {{ratioType}} {{ratio}}": " + 图片生成调用 {{symbol}}{{price}} / 1次 * {{ratioType}} {{ratio}}",

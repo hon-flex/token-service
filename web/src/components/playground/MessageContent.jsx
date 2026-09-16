@@ -28,6 +28,8 @@ import {
 import MarkdownRenderer from '../common/markdown/MarkdownRenderer';
 import ThinkingContent from './ThinkingContent';
 import PlaygroundGeneratedImageGallery from './PlaygroundGeneratedImageGallery';
+import VideoDownloadButton from './VideoDownloadButton';
+import { getVideoTaskPlaybackUrl } from '../../helpers/videoTaskPlayback';
 import {
   resolveMessageGeneratedImages,
   stripGeneratedImageMarkdown,
@@ -357,7 +359,7 @@ const MessageContent = ({
     ? resolveAssetUrisInArray(rawGeneratedImages, assetMap)
     : rawGeneratedImages;
   const mediaDimensions = message.mediaDimensions || {};
-  const videoPlayableUrl = message?.videoTask?.playableUrl;
+  const videoPlayableUrl = getVideoTaskPlaybackUrl(message?.videoTask);
   const mergedMediaDimensions = {
     ...mediaDimensions,
     ...loadedMediaDimensions,
@@ -515,6 +517,13 @@ const MessageContent = ({
               }}
             />
           </div>
+        )}
+
+        {message.role === 'assistant' && videoPlayableUrl && (
+          <VideoDownloadButton
+            task={message.videoTask}
+            videoUrl={videoPlayableUrl}
+          />
         )}
 
         {message.role === 'assistant' && generatedImages.length > 0 && (

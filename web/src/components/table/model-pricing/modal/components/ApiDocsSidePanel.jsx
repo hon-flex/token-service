@@ -57,6 +57,7 @@ import { fetchTokenKey, getServerAddress } from '../../../../../helpers/token';
 import { useIsMobile } from '../../../../../hooks/common/useIsMobile';
 import MarkdownRenderer from '../../../../common/markdown/MarkdownRenderer';
 import ApiMarkdownRenderer from '../../../../common/markdown/ApiMarkdownRenderer';
+import { h3ApiDocs, isH3VideoModel } from './h3ApiDocs';
 
 const { Text, Title } = Typography;
 
@@ -576,7 +577,7 @@ const ApiDocsSidePanel = ({
       String(apiDocsMarkdownEn || '').trim() ||
       configuredDocs.length > 0;
     if (!hasCustomDocs && useDefaultDocs && modelDefaultDocsEnabled) {
-      return getDefaultApiDocs();
+      return isH3VideoModel(modelName) ? [] : getDefaultApiDocs();
     }
     return configuredDocs;
   }, [
@@ -587,6 +588,7 @@ const ApiDocsSidePanel = ({
     docIntroductionEn,
     modelDefaultDocsEnabled,
     useDefaultDocs,
+    modelName,
   ]);
 
   const serverAddress = useMemo(() => {
@@ -652,9 +654,19 @@ const ApiDocsSidePanel = ({
   const prefersChinese = String(
     i18n.resolvedLanguage || i18n.language || '',
   ).startsWith('zh');
-  const selectedMarkdown = prefersChinese
+  const configuredMarkdown = prefersChinese
     ? apiDocsMarkdown || apiDocsMarkdownEn
     : apiDocsMarkdownEn || apiDocsMarkdown;
+  const selectedMarkdown =
+    configuredMarkdown ||
+    (useDefaultDocs &&
+    modelDefaultDocsEnabled &&
+    configuredDocs.length === 0 &&
+    !docIntroduction &&
+    !docIntroductionEn &&
+    isH3VideoModel(modelName)
+      ? h3ApiDocs
+      : '');
   const selectedDocIntroduction = prefersChinese
     ? docIntroduction || docIntroductionEn
     : docIntroductionEn || docIntroduction;

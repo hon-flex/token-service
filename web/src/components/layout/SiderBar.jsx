@@ -665,7 +665,7 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
             </div>
           )}
 
-          {/* 视频区域：暂时隐藏 minimax-h3 菜单入口。
+           {/* 视频区域： minimax-h3 菜单入口。 */}
           {hasSectionVisibleModules('video') &&
             isModuleVisible('video', 'minimax-h3') && (
               <>
@@ -682,7 +682,7 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
                 </div>
               </>
             )}
-          */}
+          */
 
           {/* 控制台区域 */}
           {hasSectionVisibleModules('console') && (
