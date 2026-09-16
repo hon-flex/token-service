@@ -13,7 +13,7 @@ var Price = 7.3
 var MinTopUp = 1
 // DefaultEpayMaxTopUp 为支付宝/微信/PayPal 等在线充值方式的默认单笔上限（额度单位与 MinTopUp 一致）。
 var DefaultEpayMaxTopUp int64 = 100000
-var USDExchangeRate = 7.3
+var USDExchangeRate = 1.0
 
 // Yipay 扩展配置。
 var YipayMchNo = ""

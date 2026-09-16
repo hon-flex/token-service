@@ -1,3 +1,22 @@
+token-service — additional derivative work notice
+================================================
+
+This repository (token-service) is a modified version of TokenFactory:
+  https://github.com/fyinfor/token-factory
+
+TokenFactory is itself derived from New API by QuantumNous and contributors:
+  https://github.com/QuantumNous/new-api
+
+The token-service modifications are provided under the GNU Affero General
+Public License, version 3 or (at your option) any later version, as stated
+in LICENSE. Existing copyrights and third-party license notices remain
+applicable. See Git history for changes and their dates.
+This additional notice was recorded on 2026-09-14.
+
+The inherited TokenFactory notice is retained verbatim below.
+
+--------------------------------------------------------------------------
+
 TokenFactory — derivative work notice
 =====================================
 

@@ -55,7 +55,7 @@ var generalSetting = GeneralSetting{
 	DefaultSiteLanguage:        "zh-CN",
 	PingIntervalEnabled:        false,
 	PingIntervalSeconds:        60,
-	QuotaDisplayType:           QuotaDisplayTypeUSD,
+	QuotaDisplayType:           QuotaDisplayTypeCNY,
 	RechargeDisplayCurrency:    QuotaDisplayTypeUSD,
 	CustomCurrencySymbol:       "¤",
 	CustomCurrencyExchangeRate: 1.0,
