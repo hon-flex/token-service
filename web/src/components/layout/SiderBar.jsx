@@ -682,7 +682,6 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
                 </div>
               </>
             )}
-          */
 
           {/* 控制台区域 */}
           {hasSectionVisibleModules('console') && (
