@@ -2407,13 +2407,9 @@ const PricingCardView = ({
     const supplierTypeLabel = supplierType
       ? getSupplierTypeLabel(supplierType, t)
       : '';
-    const supplierSuffix = getModelChannelRouteSuffixes(model)[0] || '';
     const modelDescription = showModelDescription
       ? resolveModelDescription(model)
       : '';
-    const routeMetaTitle = [supplierTypeLabel, supplierSuffix]
-      .filter(Boolean)
-      .join(' · ');
     const isHomeHot = isTopHotModel(model, hotChannelScoreMap, {
       filterSupplier,
       filterSupplierType,
@@ -2464,41 +2460,19 @@ const PricingCardView = ({
               </h3>
 
               {(isHomeHot ||
-                routeMetaTitle ||
+                supplierTypeLabel ||
                 discountBadge ||
                 hasTimePricing) && (
                 <div className='home-model-title-meta'>
-                  {routeMetaTitle ? (
-                    <button
-                      type='button'
+                  {supplierTypeLabel ? (
+                    <span
                       className='home-model-route-chip'
-                      disabled={!supplierSuffix}
-                      title={
-                        supplierSuffix
-                          ? `${routeMetaTitle} | copy ${supplierSuffix}`
-                          : routeMetaTitle
-                      }
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (supplierSuffix) {
-                          copyText?.(supplierSuffix);
-                        }
-                      }}
+                      title={supplierTypeLabel}
                     >
-                      {supplierTypeLabel ? (
-                        <span className='home-model-route-chip-supplier'>
-                          {supplierTypeLabel}
-                        </span>
-                      ) : null}
-                      {supplierTypeLabel && supplierSuffix ? (
-                        <span className='home-model-route-chip-dot'>.</span>
-                      ) : null}
-                      {supplierSuffix ? (
-                        <span className='home-model-route-chip-suffix'>
-                          {renderHighlightedText(supplierSuffix)}
-                        </span>
-                      ) : null}
-                    </button>
+                      <span className='home-model-route-chip-supplier'>
+                        {supplierTypeLabel}
+                      </span>
+                    </span>
                   ) : null}
                   {discountBadge ? (
                     <Tag
