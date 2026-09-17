@@ -24,7 +24,11 @@ For commercial licensing, please contact support@quantumnous.com
 
 .home-model-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  /* 按容器宽度自适应，最多四列；窄于单卡最小宽度时填满容器。 */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(100%, max(340px, calc((100% - 2.25rem) / 4))), 1fr)
+  );
   gap: 0.75rem;
   align-items: stretch;
 }
@@ -132,12 +136,11 @@ For commercial licensing, please contact support@quantumnous.com
 }
 .home-model-title-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.375rem;
   min-width: 0;
   margin-top: 0.45rem;
-  overflow: hidden;
-  white-space: nowrap;
 }
 .home-model-meta-chip,
 .home-model-suffix-chip {
@@ -239,6 +242,7 @@ For commercial licensing, please contact support@quantumnous.com
   color: #fff !important;
 }
 .home-model-route-chip {
+  flex-shrink: 0;
   height: 23px;
   max-width: 168px;
   min-width: 0;
@@ -650,9 +654,6 @@ html.dark
   }
 }
 @media (max-width: 767px) {
-  .home-model-cards-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .home-model-card {
     min-height: 260px;
   }

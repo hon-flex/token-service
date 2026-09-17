@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React from 'react';
-import { Tag, Space, Tooltip } from '@douyinfe/semi-ui';
+import { Button, Tag, Space, Tooltip } from '@douyinfe/semi-ui';
 import { IconHelpCircle } from '@douyinfe/semi-icons';
 import {
   renderModelTag,
@@ -32,9 +32,12 @@ import {
   renderLimitedItems,
   renderDescription,
 } from '../../../../common/ui/RenderUtils';
-import { useIsMobile } from '../../../../../hooks/common/useIsMobile';
 import { getVendorLocalizedName } from '../../../../../helpers/modelPricing';
 import i18n from '../../../../../i18n/i18n';
+import {
+  getModelChannelRouteSuffixes,
+  modelMatchesSearchTerm,
+} from '../../utils/channelRoute';
 
 function renderQuotaType(type, t) {
   switch (type) {
@@ -120,8 +123,8 @@ export const getPricingTableColumns = ({
   displayPrice,
   showRatio,
   perfMetricsMap = {},
+  isMobile = false,
 }) => {
-  const isMobile = useIsMobile();
   const priceDataCache = new WeakMap();
 
   const getPriceData = (record) => {
@@ -170,8 +173,7 @@ export const getPricingTableColumns = ({
         </div>
       );
     },
-    onFilter: (value, record) =>
-      record.model_name.toLowerCase().includes(value.toLowerCase()),
+    onFilter: (value, record) => modelMatchesSearchTerm(record, value),
   };
 
   const quotaColumn = {
@@ -201,8 +203,40 @@ export const getPricingTableColumns = ({
     render: (text, record) => renderVendor(text, record.vendor_icon, t, record),
   };
 
+  const routeSuffixColumn = {
+    title: t('路由后缀'),
+    key: 'route_suffix',
+    render: (_text, record) => {
+      const suffixes = getModelChannelRouteSuffixes(record);
+      if (suffixes.length === 0) return '-';
+      return (
+        <Space wrap>
+          {suffixes.map((suffix) => {
+            const routeName = `${record.model_name}/${suffix}`;
+            return (
+              <Button
+                key={suffix}
+                size='small'
+                theme='light'
+                title={routeName}
+                aria-label={`${t('复制通道路径')}：${routeName}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  copyText(routeName);
+                }}
+              >
+                /{suffix}
+              </Button>
+            );
+          })}
+        </Space>
+      );
+    },
+  };
+
   const baseColumns = [
     modelNameColumn,
+    routeSuffixColumn,
     vendorColumn,
     descriptionColumn,
     tagsColumn,

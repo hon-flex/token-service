@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React, { memo, useCallback } from 'react';
-import { Input, Button, Switch, Select, Divider } from '@douyinfe/semi-ui';
+import { Input, Button, Select, Divider } from '@douyinfe/semi-ui';
 import { IconSearch, IconCopy, IconFilter } from '@douyinfe/semi-icons';
 
 const SearchActions = memo(
@@ -32,7 +32,6 @@ const SearchActions = memo(
     searchValue = '',
     setShowFilterModal,
     showWithRecharge,
-    setShowWithRecharge,
     currency,
     setCurrency,
     siteDisplayType,
@@ -78,7 +77,7 @@ const SearchActions = memo(
           />
         </div>
 
-        <Button
+        {/* <Button
           theme='outline'
           type='primary'
           icon={<IconCopy />}
@@ -87,14 +86,13 @@ const SearchActions = memo(
           className='!bg-blue-500 hover:!bg-blue-600 !text-white disabled:!bg-gray-300 disabled:!text-gray-500'
         >
           {t('复制')}
-        </Button>
+        </Button> */}
 
         {!isMobile && (
           <>
             <Divider layout='vertical' margin='8px' />
-
             {/* 充值价格显示开关 */}
-            {supportsCurrencyDisplay && (
+            {/* {supportsCurrencyDisplay && (
               <div className='flex items-center gap-2'>
                 <span className='text-sm text-gray-600'>
                   {t('充值价格显示')}
@@ -104,8 +102,7 @@ const SearchActions = memo(
                   onChange={setShowWithRecharge}
                 />
               </div>
-            )}
-
+            )} */}
             {/* 货币单位选择 */}
             {supportsCurrencyDisplay && showWithRecharge && (
               <Select

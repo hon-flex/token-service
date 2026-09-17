@@ -2407,6 +2407,32 @@ const PricingCardView = ({
     const supplierTypeLabel = supplierType
       ? getSupplierTypeLabel(supplierType, t)
       : '';
+    const channelSuffixTags = getModelChannelRouteSuffixes(model).map(
+      (suffix) => {
+        const routeName = `${model.model_name}/${suffix}`;
+        return (
+          <button
+            key={suffix}
+            type='button'
+            className='home-model-route-chip'
+            title={`${t('路由后缀')}：${suffix} · ${t('复制通道路径')}：${routeName}`}
+            aria-label={`${t('复制通道路径')}：${routeName}`}
+            disabled={blurPricing || !copyText}
+            onClick={(event) => {
+              event.stopPropagation();
+              copyText?.(routeName);
+            }}
+          >
+            <span
+              className='home-model-route-chip-suffix'
+              style={{ flexShrink: 1 }}
+            >
+              /{renderHighlightedText(suffix)}
+            </span>
+          </button>
+        );
+      },
+    );
     const modelDescription = showModelDescription
       ? resolveModelDescription(model)
       : '';
@@ -2449,8 +2475,7 @@ const PricingCardView = ({
         onClick={openDetail}
       >
         <div className='home-model-card-body flex h-full min-w-0 flex-col'>
-          <div className='grid min-w-0 grid-cols-[48px_minmax(0,1fr)_auto] items-start gap-3'>
-            {getModelIcon(model)}
+          <div className='grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3'>
             <div className='min-w-0'>
               <h3
                 className='home-model-card-title m-0 truncate text-lg font-bold leading-tight'
@@ -2458,50 +2483,6 @@ const PricingCardView = ({
               >
                 {renderHighlightedText(model.model_name)}
               </h3>
-
-              {(isHomeHot ||
-                supplierTypeLabel ||
-                discountBadge ||
-                hasTimePricing) && (
-                <div className='home-model-title-meta'>
-                  {supplierTypeLabel ? (
-                    <span
-                      className='home-model-route-chip'
-                      title={supplierTypeLabel}
-                    >
-                      <span className='home-model-route-chip-supplier'>
-                        {supplierTypeLabel}
-                      </span>
-                    </span>
-                  ) : null}
-                  {discountBadge ? (
-                    <Tag
-                      shape='circle'
-                      size='small'
-                      className='home-model-discount-tag'
-                    >
-                      {discountBadge}
-                    </Tag>
-                  ) : null}
-                  {hasTimePricing ? (
-                    <span
-                      className='home-model-time-pricing-pill'
-                      title={timePricingTitle}
-                    >
-                      <span className='home-model-time-pricing-pill-text'>
-                        {t('分时计费')}
-                      </span>
-                    </span>
-                  ) : null}
-                  {isHomeHot ? (
-                    <span className='home-model-hot-pill' title={t('热门')}>
-                      <span className='home-model-hot-pill-text'>
-                        {t('热门')}
-                      </span>
-                    </span>
-                  ) : null}
-                </div>
-              )}
             </div>
 
             <div className='flex items-center gap-2'>
@@ -2516,18 +2497,52 @@ const PricingCardView = ({
                   copyText?.(model.model_name);
                 }}
               />
-
-              {rowSelection && (
-                <Checkbox
-                  checked={isSelected}
-                  onChange={(event) => {
-                    event.stopPropagation();
-                    handleCheckboxChange(model, event.target.checked);
-                  }}
-                />
-              )}
             </div>
           </div>
+
+          {(isHomeHot ||
+            supplierTypeLabel ||
+            channelSuffixTags.length > 0 ||
+            discountBadge ||
+            hasTimePricing) && (
+            <div className='home-model-title-meta'>
+              {supplierTypeLabel ? (
+                <span
+                  className='home-model-route-chip'
+                  title={supplierTypeLabel}
+                >
+                  <span className='home-model-route-chip-supplier'>
+                    {supplierTypeLabel}
+                  </span>
+                </span>
+              ) : null}
+              {channelSuffixTags}
+              {discountBadge ? (
+                <Tag
+                  shape='circle'
+                  size='small'
+                  className='home-model-discount-tag'
+                >
+                  {discountBadge}
+                </Tag>
+              ) : null}
+              {hasTimePricing ? (
+                <span
+                  className='home-model-time-pricing-pill'
+                  title={timePricingTitle}
+                >
+                  <span className='home-model-time-pricing-pill-text'>
+                    {t('分时计费')}
+                  </span>
+                </span>
+              ) : null}
+              {isHomeHot ? (
+                <span className='home-model-hot-pill' title={t('热门')}>
+                  <span className='home-model-hot-pill-text'>{t('热门')}</span>
+                </span>
+              ) : null}
+            </div>
+          )}
 
           <div
             className='home-model-price-block mt-3 flex min-w-0 flex-col gap-2'
@@ -2567,7 +2582,7 @@ const PricingCardView = ({
                 {t('\u8be6\u60c5')}
                 <ChevronRight
                   size={14}
-                  strokeWidth={2.25}
+                  stroke-Width={2.25}
                   className='home-model-detail-arrow'
                   aria-hidden='true'
                 />
@@ -2676,8 +2691,9 @@ const PricingCardView = ({
     return (
       <>
         <PricingCardSkeleton
-          rowSelection={!!rowSelection}
+          rowSelection={!homeCardMode && !!rowSelection}
           showRatio={showRatio}
+          homeCardMode={homeCardMode}
         />
       </>
     );

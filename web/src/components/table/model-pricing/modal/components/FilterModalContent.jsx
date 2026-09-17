@@ -92,7 +92,7 @@ const FilterModalContent = ({ sidebarProps, t }) => {
         setTokenUnit={setTokenUnit}
         loading={loading}
         t={t}
-      />
+      /> 
 
       <PricingVendors
         filterVendor={filterVendor}
