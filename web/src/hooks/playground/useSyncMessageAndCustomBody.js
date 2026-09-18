@@ -54,7 +54,12 @@ export const useSyncMessageAndCustomBody = (
   }, []);
 
   const syncMessageToCustomBody = useCallback(() => {
-    if (!customRequestMode || isUpdatingFromCustomBody.current) return;
+    if (
+      !customRequestMode ||
+      (inputs.display_mode || 'text') !== 'text' ||
+      isUpdatingFromCustomBody.current
+    )
+      return;
 
     const currentMessageHash = getMessageHash(message);
     if (currentMessageHash === lastMessageHash.current) return;
@@ -94,6 +99,7 @@ export const useSyncMessageAndCustomBody = (
     customRequestMode,
     customRequestBody,
     message,
+    inputs.display_mode,
     inputs.model,
     inputs.temperature,
     inputs.stream,
@@ -104,7 +110,12 @@ export const useSyncMessageAndCustomBody = (
   ]);
 
   const syncCustomBodyToMessage = useCallback(() => {
-    if (!customRequestMode || isUpdatingFromMessage.current) return;
+    if (
+      !customRequestMode ||
+      (inputs.display_mode || 'text') !== 'text' ||
+      isUpdatingFromMessage.current
+    )
+      return;
 
     const currentCustomBodyHash = getCustomBodyHash(customRequestBody);
     if (currentCustomBodyHash === lastCustomBodyHash.current) return;
@@ -139,6 +150,7 @@ export const useSyncMessageAndCustomBody = (
   }, [
     customRequestMode,
     customRequestBody,
+    inputs.display_mode,
     getCustomBodyHash,
     getMessageHash,
     setMessage,

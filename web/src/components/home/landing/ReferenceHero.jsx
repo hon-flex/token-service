@@ -121,12 +121,11 @@ export default function ReferenceHero({ systemName, docs }) {
         </div>
         <div className='hc-pill-badge'>
           <span className='hc-pill-dot' />
-          {systemName} · HonMaaS {t('大模型服务网关')}
+          {systemName} · HonMaaS {t('大模型服务平台')}
         </div>
         <h1>
-          {' '}
-          {t('国产前沿大模型')}{' '}
-          <span className='shine-text'>{t('聚合分发与 Token 服务')}</span>
+          {t('国产前沿大模型')}
+          <span className='shine-text'>{t('一站式Token服务')}</span>
         </h1>
         <p className='hc-hero-desc'>
           {' '}
@@ -211,7 +210,7 @@ export default function ReferenceHero({ systemName, docs }) {
               <rect x='2' y='4' width='20' height='6' rx='2' />
               <rect x='2' y='14' width='20' height='6' rx='2' />
             </svg>{' '}
-            {t('HonMaaS 调度网关')}{' '}
+            {t('HonMaaS 平台')}{' '}
           </div>
           <div className='hc-console-status'>
             <span

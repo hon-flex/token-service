@@ -83,8 +83,8 @@ export const OptimizedSettingsPanel = React.memo(
       prevProps.showDebugPanel === nextProps.showDebugPanel &&
       prevProps.showSettings === nextProps.showSettings &&
       prevProps.hideMediaTabs === nextProps.hideMediaTabs &&
-      JSON.stringify(prevProps.previewPayload) ===
-        JSON.stringify(nextProps.previewPayload) &&
+      JSON.stringify(prevProps.defaultPayload) ===
+        JSON.stringify(nextProps.defaultPayload) &&
       JSON.stringify(prevProps.messages) ===
         JSON.stringify(nextProps.messages) &&
       prevProps.userId === nextProps.userId

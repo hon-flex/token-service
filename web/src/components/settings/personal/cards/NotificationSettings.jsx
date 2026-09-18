@@ -254,7 +254,7 @@ const NotificationSettings = ({
       title: t('视频'),
       description: t('模型服务'),
       modules: [
-        { key: 'minimax-h3', title: 'minimax-h3', description: 'StarFilm AI' },
+        { key: 'minimax-h3', title: t('AI视频服务'), description: 'StarFilm AI' },
       ],
     },
     {

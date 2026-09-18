@@ -1,0 +1,421 @@
+/*
+ * Copyright (c) 2026 燧弘华创
+ * Project: token-factory
+ */
+
+#hc-advantages .hc-sec-head {
+  margin-bottom: 8px;
+}
+.hc-infra-copy {
+  align-self: start;
+  padding-top: 136px;
+}
+
+.hc-ecosystem {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 720 / 820;
+  container-type: inline-size;
+  isolation: isolate;
+}
+.hc-ecosystem::before {
+  content: '';
+  position: absolute;
+  inset: 6% -2% 0;
+  background: radial-gradient(
+    ellipse at 55% 52%,
+    #51c9ef22,
+    #91dfff10 53%,
+    transparent 72%
+  );
+  pointer-events: none;
+}
+.hc-ecosystem-device {
+  position: absolute;
+  inset: 0;
+  transform: skewY(1deg);
+  animation: hc-ecosystem-float 9s ease-in-out infinite;
+}
+.hc-ecosystem-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: saturate(1.06);
+}
+.hc-ecosystem-floor {
+  position: absolute;
+  inset: 87% -3% -3%;
+  background:
+    linear-gradient(#6ec5e63d 1px, transparent 1px),
+    linear-gradient(90deg, #6ec5e63d 1px, transparent 1px),
+    radial-gradient(ellipse, #82d7ff3d, transparent 72%);
+  background-size:
+    26px 26px,
+    26px 26px,
+    100% 100%;
+  transform: perspective(400px) rotateX(55deg);
+  mask-image: radial-gradient(ellipse, #000 24%, transparent 74%);
+  pointer-events: none;
+}
+.hc-ecosystem-labels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.hc-ecosystem-label {
+  position: absolute;
+  top: var(--label-top);
+  height: 6.1%;
+  left: 31%;
+  right: 9%;
+  display: flex;
+  align-items: center;
+  gap: 1.8cqi;
+  color: #246fff;
+}
+.hc-ecosystem-label > svg {
+  flex: 0 0 auto;
+  width: 4.6cqi;
+  height: 4.6cqi;
+}
+.hc-ecosystem-label h4 {
+  margin: 0 0 0.35cqi;
+  font-size: clamp(14px, 3cqi, 23px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #163d70;
+  letter-spacing: -0.02em;
+}
+.hc-ecosystem-label p {
+  margin: 0;
+  font-size: clamp(10px, 2.1cqi, 15px);
+  line-height: 1.2;
+  color: #4d79af;
+  white-space: nowrap;
+}
+/* Only transforms, opacity and short SVG strokes change during playback. */
+.hc-ecosystem[data-active='false'] *,
+.hc-ecosystem[data-active='false'] *::before,
+.hc-ecosystem[data-active='false'] *::after {
+  animation-play-state: paused !important;
+}
+.hc-ecosystem[data-entered='false'] .hc-ecosystem-device {
+  opacity: 0;
+}
+.hc-ecosystem[data-entered='true'][data-established='false'] .hc-ecosystem-tier,
+.hc-ecosystem[data-entered='true'][data-established='false']
+  .hc-ecosystem-label {
+  animation: hc-ecosystem-establish 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--tier-delay);
+}
+.hc-ecosystem[data-entered='true'][data-established='false']
+  .hc-ecosystem-supports {
+  animation: hc-ecosystem-connect 420ms ease-out both;
+  animation-delay: var(--support-delay);
+}
+.hc-ecosystem-platform-aura {
+  animation: hc-ecosystem-aura var(--layer-period) ease-in-out infinite;
+  animation-delay: var(--layer-phase);
+}
+.hc-ecosystem-tier-charge {
+  opacity: 0;
+  animation: hc-ecosystem-charge 7.2s ease-in-out infinite;
+  animation-delay: var(--power-delay);
+}
+.hc-ecosystem-current {
+  opacity: 0;
+  stroke-dasharray: 16 184;
+  animation: hc-ecosystem-current 7.2s linear infinite;
+  animation-delay: calc(var(--power-delay, 0s) + var(--column-offset, 0s));
+}
+.hc-ecosystem-contact {
+  animation: hc-ecosystem-contact 7.2s ease-in-out infinite;
+  animation-delay: calc(var(--power-delay, 0s) + var(--column-offset, 0s));
+}
+.hc-ecosystem-route {
+  stroke-dasharray: 12 155;
+  animation: hc-ecosystem-route 7s linear infinite;
+}
+.hc-ecosystem-model-route {
+  stroke-dasharray: 9 91;
+  animation: hc-ecosystem-model-route 4.6s linear infinite;
+  animation-delay: var(--route-phase);
+}
+.hc-ecosystem-core-glow,
+.hc-ecosystem-core-rim,
+.hc-ecosystem-core-status {
+  animation: hc-ecosystem-core-pulse 3.8s ease-in-out infinite;
+  animation-delay: 1.25s;
+}
+.hc-ecosystem-core-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hc-ecosystem-core-ring 3.8s ease-in-out infinite;
+  animation-delay: 1.25s;
+}
+.hc-ecosystem-core-orbit {
+  stroke-dasharray: 14 12 4 70;
+  animation: hc-ecosystem-model-route 5s linear infinite;
+  animation-delay: 1.25s;
+}
+.hc-ecosystem-sweep {
+  opacity: 0;
+  stroke-dasharray: 13 187;
+  animation: hc-ecosystem-sweep 8.6s linear infinite;
+  animation-delay: var(--object-phase, 0s);
+}
+.hc-ecosystem-platform-sweep {
+  animation-duration: var(--layer-period);
+  animation-delay: var(--layer-phase);
+}
+.hc-ecosystem-wave-flow {
+  stroke-dasharray: 18 82;
+  stroke-width: 2.3;
+  opacity: 0.9;
+  animation: hc-ecosystem-model-route 4.8s linear infinite;
+}
+.hc-ecosystem-online {
+  animation: hc-ecosystem-online 5.8s ease-in-out infinite;
+  animation-delay: var(--object-phase, 0s);
+}
+.hc-ecosystem-indicator {
+  animation: hc-ecosystem-online 4.7s ease-in-out infinite;
+  animation-delay: var(--object-phase, 0s);
+}
+.hc-ecosystem-packet {
+  animation: hc-ecosystem-packet 5.6s ease-in-out infinite;
+  animation-delay: var(--object-phase, 0s);
+}
+.hc-ecosystem-shield-glow {
+  animation: hc-ecosystem-online 5.3s ease-in-out infinite;
+  animation-delay: -1.4s;
+}
+.hc-ecosystem-server-led {
+  animation: hc-ecosystem-online 6.4s ease-in-out infinite;
+  animation-delay: calc(var(--object-phase) + var(--led-offset));
+}
+.hc-ecosystem-server-sweep {
+  animation-duration: 11.4s;
+}
+@keyframes hc-ecosystem-establish {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes hc-ecosystem-connect {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes hc-ecosystem-aura {
+  0%,
+  100% {
+    opacity: var(--aura-low);
+  }
+  50% {
+    opacity: var(--aura-high);
+  }
+}
+@keyframes hc-ecosystem-charge {
+  0%,
+  28%,
+  100% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.8;
+  }
+}
+@keyframes hc-ecosystem-current {
+  0% {
+    stroke-dashoffset: 16;
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.95;
+  }
+  23% {
+    stroke-dashoffset: -100;
+    opacity: 0.95;
+  }
+  28%,
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+@keyframes hc-ecosystem-contact {
+  0%,
+  32%,
+  100% {
+    opacity: 0.4;
+  }
+  9%,
+  20% {
+    opacity: 1;
+  }
+}
+@keyframes hc-ecosystem-route {
+  to {
+    stroke-dashoffset: -167;
+  }
+}
+@keyframes hc-ecosystem-model-route {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+@keyframes hc-ecosystem-core-pulse {
+  0%,
+  100% {
+    opacity: 0.38;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes hc-ecosystem-core-ring {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.055);
+  }
+}
+@keyframes hc-ecosystem-sweep {
+  0% {
+    stroke-dashoffset: 13;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.8;
+  }
+  52% {
+    opacity: 0.8;
+  }
+  65%,
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+@keyframes hc-ecosystem-online {
+  0%,
+  100% {
+    opacity: 0.38;
+  }
+  48%,
+  62% {
+    opacity: 1;
+  }
+}
+@keyframes hc-ecosystem-packet {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(2px, -2px);
+  }
+}
+@keyframes hc-ecosystem-float {
+  0%,
+  100% {
+    transform: translateY(0) skewY(1deg);
+  }
+  50% {
+    transform: translateY(-6px) skewY(1deg);
+  }
+}
+/* Keep the blue/cyan objects vivid; adapt only the broad glass surfaces. */
+.hc-root[data-theme='dark'] .hc-ecosystem {
+  --hc-glass-top-0: #4ba6ed38;
+  --hc-glass-top-1: #67d6f744;
+  --hc-glass-top-2: #2987e047;
+  --hc-glass-top-3: #9adfff60;
+  --hc-glass-core-top-0: #3084e88a;
+  --hc-glass-core-top-1: #218aec9e;
+  --hc-glass-core-top-2: #39bed795;
+  --hc-glass-core-top-3: #54cdfc80;
+  --hc-glass-front-0: #246b9bde;
+  --hc-glass-front-1: #173b60e8;
+  --hc-glass-front-2: #215376e6;
+  --hc-glass-front-3: #24669bb8;
+  --hc-glass-side-0: #2986bf70;
+  --hc-glass-side-1: #174d7db3;
+  --hc-glass-side-2: #1b6294c9;
+  --hc-glass-sheen-1: #9fdfff20;
+  --hc-glass-edge: #83dbff96;
+}
+.hc-root[data-theme='dark'] .hc-ecosystem-label {
+  color: #65d7ff;
+}
+.hc-root[data-theme='dark'] .hc-ecosystem-label h4 {
+  color: #e2f6ff;
+}
+.hc-root[data-theme='dark'] .hc-ecosystem-label p {
+  color: #a7cce8;
+}
+.hc-root[data-theme='dark'] .hc-ecosystem::before {
+  background: radial-gradient(ellipse, #257ce52b, transparent 72%);
+}
+@media (max-width: 800px) {
+  #hc-advantages .hc-sec-head {
+    margin-bottom: 36px;
+  }
+  .hc-infra-copy {
+    padding-top: 0;
+  }
+  .hc-ecosystem {
+    max-width: 660px;
+    margin-inline: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hc-ecosystem *,
+  .hc-ecosystem *::before,
+  .hc-ecosystem *::after {
+    animation: none !important;
+  }
+  .hc-ecosystem[data-entered] .hc-ecosystem-device,
+  .hc-ecosystem-tier,
+  .hc-ecosystem-label,
+  .hc-ecosystem-supports {
+    opacity: 1;
+  }
+  .hc-ecosystem-current,
+  .hc-ecosystem-sweep,
+  .hc-ecosystem-model-route,
+  .hc-ecosystem-tier-charge {
+    opacity: 0;
+  }
+  .hc-ecosystem-core-orbit {
+    stroke-dasharray: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hc-ecosystem-label {
+    left: 27%;
+    gap: 1.5cqi;
+  }
+  .hc-ecosystem-label h4 {
+    line-height: 1.1;
+    margin-bottom: 0;
+  }
+  .hc-ecosystem-label p {
+    line-height: 1.1;
+  }
+}

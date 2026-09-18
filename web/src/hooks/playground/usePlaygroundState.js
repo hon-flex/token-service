@@ -260,13 +260,22 @@ export const usePlaygroundState = (userId) => {
   const saveConfigTimeoutRef = useRef(null);
   const saveMessagesTimeoutRef = useRef(null);
   const modeModelCacheRef = useRef({
-    text: savedConfig.inputs?.model || DEFAULT_CONFIG.inputs.model,
-    image: savedConfig.inputs?.model || DEFAULT_CONFIG.inputs.model,
-    video: savedConfig.inputs?.model || DEFAULT_CONFIG.inputs.model,
+    [savedConfig.inputs?.display_mode || 'text']:
+      savedConfig.inputs?.model ?? DEFAULT_CONFIG.inputs.model,
   });
+  const latestInputsRef = useRef(inputs);
+  latestInputsRef.current = inputs;
 
   // 配置更新函数
   const handleInputChange = useCallback((name, value) => {
+    if (
+      ['display_mode', 'model', 'selected_route_slug'].includes(name) &&
+      latestInputsRef.current[name] !== value
+    ) {
+      // 请求目标变化后重新使用当前面板生成请求，不能沿用上一模型的自定义 JSON。
+      setCustomRequestMode(false);
+      setCustomRequestBody('');
+    }
     setInputs((prev) => {
       const currentMode = prev.display_mode || 'text';
 
@@ -286,7 +295,7 @@ export const usePlaygroundState = (userId) => {
         return {
           ...prev,
           display_mode: nextMode,
-          model: nextCache[nextMode] || prev.model,
+          model: nextCache[nextMode] ?? '',
         };
       }
 

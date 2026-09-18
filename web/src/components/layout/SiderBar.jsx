@@ -677,7 +677,7 @@ const MainSiderBar = ({ onNavigate = () => {} }) => {
                   {renderSubItem({
                     text: t('模型服务'),
                     itemKey: 'video-model-services',
-                    items: [{ text: 'minimax-h3', itemKey: 'minimax-h3' }],
+                    items: [{ text: t('AI视频服务'), itemKey: 'minimax-h3' }],
                   })}
                 </div>
               </>

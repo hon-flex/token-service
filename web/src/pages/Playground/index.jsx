@@ -23,6 +23,7 @@ import React, {
   useCallback,
   useRef,
   useLayoutEffect,
+  useMemo,
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -579,18 +580,9 @@ const Playground = () => {
     },
   };
 
-  // 构建预览请求体
-  const constructPreviewPayload = useCallback(() => {
+  // 默认请求模板只根据当前模式、模型、参数与消息生成，不读取自定义 JSON。
+  const defaultPayload = useMemo(() => {
     try {
-      // 如果是自定义请求体模式且有自定义内容，直接返回解析后的自定义请求体
-      if (customRequestMode && customRequestBody && customRequestBody.trim()) {
-        try {
-          return JSON.parse(customRequestBody);
-        } catch (parseError) {
-          console.warn('自定义请求体JSON解析失败，回退到默认预览:', parseError);
-        }
-      }
-
       // 默认预览逻辑
       let messages = [...message];
 
@@ -632,7 +624,19 @@ const Playground = () => {
       console.error('构造预览请求体失败:', error);
       return null;
     }
-  }, [inputs, parameterEnabled, message, customRequestMode, customRequestBody]);
+  }, [inputs, parameterEnabled, message]);
+
+  // 调试预览可显示自定义 JSON；高级编辑器始终从独立的默认模板初始化。
+  const constructPreviewPayload = useCallback(() => {
+    if (customRequestMode && customRequestBody?.trim()) {
+      try {
+        return JSON.parse(customRequestBody);
+      } catch (parseError) {
+        console.warn('自定义请求体JSON解析失败，回退到默认预览:', parseError);
+      }
+    }
+    return defaultPayload;
+  }, [defaultPayload, customRequestMode, customRequestBody]);
 
   // 发送消息（副作用放在 setState 外，避免 StrictMode 重复执行 updater 导致多次请求）
   const onMessageSend = useCallback(
@@ -1006,7 +1010,7 @@ const Playground = () => {
                 onConfigReset={handleConfigReset}
                 onCustomRequestModeChange={setCustomRequestMode}
                 onCustomRequestBodyChange={setCustomRequestBody}
-                previewPayload={previewPayload}
+                defaultPayload={defaultPayload}
                 messages={message}
                 userId={userState?.user?.id}
                 hideMediaTabs={hideMediaTabs}

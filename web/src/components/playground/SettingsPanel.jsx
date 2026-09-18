@@ -75,14 +75,6 @@ const SECTION_KEYS = {
 const renderPlaygroundGroupOption = (item) =>
   renderGroupOption({ ...item, ratio: undefined });
 
-// 切换文本/图片/视频时默认回到模型分栏；自定义请求模式进入高级分栏。
-const getDefaultSection = (displayMode, customRequestMode) => {
-  if (customRequestMode) {
-    return SECTION_KEYS.ADVANCED;
-  }
-  return SECTION_KEYS.BASIC;
-};
-
 const buildSectionTabs = (t) => [
   {
     key: SECTION_KEYS.BASIC,
@@ -238,7 +230,7 @@ const SettingsPanel = ({
   onConfigReset,
   onCustomRequestModeChange,
   onCustomRequestBodyChange,
-  previewPayload,
+  defaultPayload,
   messages,
   userId,
   hideMediaTabs = false,
@@ -257,6 +249,11 @@ const SettingsPanel = ({
   const isTextMode = displayMode === 'text';
   const isImageMode = displayMode === 'image';
   const isVideoMode = displayMode === 'video';
+  const selectedModel = models.some((option) => option.value === inputs.model)
+    ? inputs.model
+    : undefined;
+  const modelPlaceholder =
+    models.length === 0 ? t('暂无模型') : t('请选择模型');
   const mediaDisabledClassName = customRequestMode
     ? 'opacity-50 pointer-events-none'
     : '';
@@ -297,21 +294,24 @@ const SettingsPanel = ({
     selectedVideoSize?.size || selectedVideoResolution;
 
   const showGenerateAudioSwitch = isVideoMode;
-  const preferredSection = getDefaultSection(displayMode, customRequestMode);
-  const [activeSection, setActiveSection] = useState(preferredSection);
+  const [activeSection, setActiveSection] = useState(
+    customRequestMode ? SECTION_KEYS.ADVANCED : SECTION_KEYS.BASIC,
+  );
   const previousDisplayModeRef = useRef(displayMode);
 
   useEffect(() => {
-    if (customRequestMode) {
-      setActiveSection(SECTION_KEYS.ADVANCED);
-      previousDisplayModeRef.current = displayMode;
-      return;
-    }
     if (previousDisplayModeRef.current !== displayMode) {
       setActiveSection(SECTION_KEYS.BASIC);
       previousDisplayModeRef.current = displayMode;
     }
-  }, [customRequestMode, displayMode]);
+  }, [displayMode]);
+
+  const handleSectionChange = (section) => {
+    if (section !== SECTION_KEYS.ADVANCED && customRequestMode) {
+      onCustomRequestModeChange(false);
+    }
+    setActiveSection(section);
+  };
 
   const sectionTabs = useMemo(() => buildSectionTabs(t), [t]);
   const aspectRatioOptions = useMemo(() => buildAspectRatioOptions(t), [t]);
@@ -643,14 +643,14 @@ const SettingsPanel = ({
           </Field>
           <Field label={t('模型')}>
             <Select
-              placeholder={t('请选择模型')}
+              placeholder={modelPlaceholder}
               name='model'
               required
               selection
               filter={selectFilter}
               autoClearSearchValue={false}
               onChange={(value) => onInputChange('model', value)}
-              value={inputs.model}
+              value={selectedModel}
               autoComplete='new-password'
               optionList={models}
               style={{ width: '100%' }}
@@ -779,7 +779,7 @@ const SettingsPanel = ({
         customRequestBody={customRequestBody}
         onCustomRequestModeChange={onCustomRequestModeChange}
         onCustomRequestBodyChange={onCustomRequestBodyChange}
-        defaultPayload={previewPayload}
+        defaultPayload={defaultPayload}
       />
     </Surface>
   );
@@ -820,7 +820,7 @@ const SettingsPanel = ({
                 {t('模型配置')}
               </Typography.Title>
               <Typography.Text className='block truncate text-xs text-[var(--semi-color-text-2)]'>
-                {inputs.model || t('请选择模型')}
+                {selectedModel || modelPlaceholder}
               </Typography.Text>
             </div>
           </div>
@@ -869,7 +869,7 @@ const SettingsPanel = ({
               active={activeSection === item.key}
               icon={item.icon}
               label={item.label}
-              onClick={() => setActiveSection(item.key)}
+              onClick={() => handleSectionChange(item.key)}
             />
           ))}
         </div>

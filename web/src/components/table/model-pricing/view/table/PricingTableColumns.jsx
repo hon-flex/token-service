@@ -225,7 +225,7 @@ export const getPricingTableColumns = ({
                   copyText(routeName);
                 }}
               >
-                /{suffix}
+                {suffix}
               </Button>
             );
           })}

@@ -171,7 +171,7 @@ export const useDataLoader = (
   /**
    * 接口返回的带 vendor 信息的原始模型行，供「仅客户端」按类型过滤（与模型广场一致、且避免与请求竞态导致类型与列表不同步）
    */
-  const [playgroundRawModels, setPlaygroundRawModels] = useState([]);
+  const [playgroundRawModels, setPlaygroundRawModels] = useState(null);
   const latestVideoPricingStateRef = useRef({
     tiers: inputs.selected_video_pricing_tiers || [],
     resolution: inputs.video_resolution_preset,
@@ -292,14 +292,15 @@ export const useDataLoader = (
    */
   useEffect(() => {
     if (!userState?.user) {
-      setPlaygroundRawModels([]);
+      setPlaygroundRawModels(null);
       allModelTypesRef.current = [];
       setModelTypes([]);
       setModels([]);
       setSupplierOptions([{ label: `${t('随机')} (${t('默认')})`, value: '' }]);
       return;
     }
-    if (playgroundRawModels.length === 0) {
+    // null 表示尚未加载；已加载的空列表也需要清空失效的模型与渠道。
+    if (playgroundRawModels === null) {
       setModels([]);
       setSupplierOptions([{ label: `${t('随机')} (${t('默认')})`, value: '' }]);
       return;
@@ -353,13 +354,10 @@ export const useDataLoader = (
       inputs.model,
     );
     setModels(modelOptions);
-    if (selectedModel && selectedModel !== inputs.model) {
-      handleInputChange('model', selectedModel);
+    const selectedModelName = selectedModel ?? '';
+    if (selectedModelName !== inputs.model) {
+      handleInputChange('model', selectedModelName);
     }
-    const selectedModelName =
-      selectedModel !== undefined && selectedModel !== null
-        ? selectedModel
-        : inputs.model;
     const selectedModelRow = modeFilteredItems.find(
       (item) => item?.model_name === selectedModelName,
     );

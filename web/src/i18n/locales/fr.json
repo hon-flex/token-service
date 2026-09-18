@@ -1,6 +1,18 @@
 {
   "视频生成": "Génération vidéo",
   "translation": {
+    "弘信五层架构": "Architecture Hongxin en cinq couches",
+    "千行百业「AI+」应用生态": "Écosystème applicatif IA+",
+    "模型层": "Modèles",
+    "阶跃星辰 · 恒星AI · 算力服务": "StepFun · Hengxing AI · Calcul",
+    "基础设施层": "Infrastructure",
+    "燧弘华创算力云 · 整合与调度": "Cloud Suihong · Orchestration",
+    "芯片层": "Puces",
+    "硬件生态 · 全生命周期服务": "Matériel · Services du cycle de vie",
+    "能源层": "Énergie",
+    "已签约 2.1GW · 在谈及筹划 5GW": "2,1 GW signés · 5 GW en projet",
+    "一站式Token服务": "Services de tokens tout-en-un",
+    "AI视频服务": "Services vidéo IA",
     "下载视频": "Télécharger la vidéo",
     "模型服务": "Services de modèles",
     " ": " ",

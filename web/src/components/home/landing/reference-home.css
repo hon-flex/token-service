@@ -952,10 +952,6 @@
   object-fit: contain;
   object-position: left center;
 }
-.hc-client-tools img {
-  object-fit: contain;
-  flex-shrink: 0;
-}
 .hc-flow-brand {
   width: 46px;
   height: 31px;
@@ -1043,11 +1039,11 @@
   }
 }
 
-/* Five connected planes, with the gateway as the structural center. */
+/* Existing advantage copy paired with the five-level ecosystem. */
 .hc-infra {
   display: grid;
-  grid-template-columns: 0.92fr 1.08fr;
-  gap: 66px;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  gap: 48px;
   align-items: center;
 }
 .hc-infra-copy h3 {
@@ -1117,253 +1113,6 @@
   background: #428af0;
   box-shadow: 0 0 0 3px #e5efff;
 }
-.hc-client-tools {
-  margin-top: 28px;
-  padding-top: 26px;
-  border-top: 1px solid var(--line);
-  color: var(--text-3);
-  font-size: 13px;
-}
-.hc-client-tools > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 16px;
-}
-.hc-client-tools > div > span {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 13px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--bg-card);
-  color: var(--text);
-  font-size: 12px;
-}
-/* Shared perspective is drawn into the platform face, never into the text. */
-.hc-architecture {
-  position: relative;
-  aspect-ratio: 640 / 680;
-  width: 100%;
-  container-type: inline-size;
-  isolation: isolate;
-}
-.hc-architecture::before {
-  content: '';
-  position: absolute;
-  inset: 1% -8% 14%;
-  background: radial-gradient(
-    ellipse at 55% 42%,
-    #80bcff42 0%,
-    #b0d7ff25 40%,
-    transparent 72%
-  );
-  filter: blur(26px);
-  z-index: -1;
-  pointer-events: none;
-}
-.hc-architecture-floor {
-  position: absolute;
-  inset: 75% -3% 0;
-  transform: perspective(540px) rotateX(53deg);
-  background:
-    linear-gradient(#83b8f54a 1px, transparent 1px),
-    linear-gradient(90deg, #83b8f54a 1px, transparent 1px),
-    radial-gradient(ellipse, #8ac1fa52, #b9dcff28 55%, transparent 76%);
-  background-size:
-    27px 27px,
-    27px 27px,
-    100% 100%;
-  mask-image: radial-gradient(ellipse, #000 20%, transparent 73%);
-  z-index: 0;
-}
-.hc-architecture-column {
-  position: absolute;
-  width: 1.65%;
-  border: 1px solid #a4d1ff35;
-  background: linear-gradient(
-    90deg,
-    #d9efff10,
-    #8bc1fb52 38%,
-    #d7eeff70 65%,
-    #7fbafc24
-  );
-  box-shadow:
-    inset 1px 0 2px #f4fbff9c,
-    0 0 7px #78b5ff18;
-  filter: blur(0.45px);
-  mask-image: linear-gradient(transparent, #000 9%, #000 87%, transparent);
-  z-index: 1;
-}
-.column-back {
-  left: 32.1%;
-  top: 0;
-  bottom: 13%;
-}
-.column-front {
-  right: 10.2%;
-  top: 1%;
-  bottom: 12%;
-}
-.hc-stack {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.hc-layer {
-  position: absolute;
-  top: calc(2% + var(--layer-index) * 16%);
-  left: 0;
-  width: 100%;
-  height: 25%;
-  z-index: calc(7 - var(--layer-index));
-}
-.hc-glass-platform {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  position: relative;
-  filter: drop-shadow(0 5px 3px #8bc7ff30);
-}
-.hc-layer-light {
-  position: absolute;
-  inset: 52% 2% 0;
-  background: radial-gradient(
-    ellipse,
-    #85bfff3b,
-    #acd5ff20 48%,
-    transparent 74%
-  );
-  filter: blur(15px);
-  pointer-events: none;
-}
-.hc-layer-light::after {
-  content: '';
-  position: absolute;
-  inset: 17% 4% 39%;
-  background: radial-gradient(ellipse, #78baff57, transparent 75%);
-  filter: blur(5px);
-}
-.hc-layer.featured .hc-layer-light {
-  inset: 43% -3% -21%;
-  background: radial-gradient(
-    ellipse at 55% 40%,
-    #55a4ff69,
-    #8fc7ff35 46%,
-    transparent 73%
-  );
-  filter: blur(17px);
-}
-.hc-layer.featured + .hc-layer .hc-layer-light {
-  background: radial-gradient(
-    ellipse,
-    #6eafff48,
-    #a8d5ff24 50%,
-    transparent 74%
-  );
-}
-.hc-glass-face {
-  stroke: #d2e7ff;
-  stroke-width: 1.1;
-}
-.hc-glass-collars {
-  fill: #c4e6ff18;
-  stroke: #f1fbff75;
-  stroke-width: 1;
-}
-.hc-glass-depth {
-  stroke: #c7e7ff66;
-  stroke-width: 0.8;
-}
-.hc-glass-edge {
-  stroke: #ffffffed;
-  stroke-width: 1.8;
-}
-.hc-layer-content {
-  position: absolute;
-  left: 24%;
-  right: 12%;
-  top: 30%;
-  display: flex;
-  align-items: center;
-  gap: clamp(9px, 1.8cqi, 12px);
-}
-.hc-layer-content > svg {
-  color: #2777f1;
-  width: clamp(24px, 5cqi, 33px);
-  height: auto;
-  flex-shrink: 0;
-  stroke-width: 1.8;
-}
-.hc-layer h4 {
-  font-size: clamp(16px, 3.3cqi, 22px);
-  line-height: 1.25;
-  margin: 0 0 3px;
-  color: #142d50;
-  font-weight: 700;
-}
-.hc-layer p {
-  margin: 0;
-  color: #4e6d96;
-  font-size: clamp(11px, 2.25cqi, 15px);
-  line-height: 1.45;
-  white-space: nowrap;
-}
-.hc-layer.featured {
-  width: 100%;
-  left: 0;
-}
-.hc-layer.featured .hc-glass-platform {
-  filter: drop-shadow(0 6px 4px #68aaff45);
-}
-.hc-layer.featured .hc-glass-face {
-  stroke: #91c6ff;
-  stroke-width: 1.25;
-}
-.hc-layer.featured .hc-glass-edge {
-  stroke: #e9f8ff;
-  stroke-width: 2.1;
-}
-.hc-layer.featured h4 {
-  color: #075ee2;
-  font-weight: 750;
-}
-.hc-layer.featured .hc-layer-content > svg {
-  color: #1269e8;
-  stroke-width: 2;
-}
-.hc-layer-ports {
-  position: absolute;
-  top: 72%;
-  left: 31.2%;
-  right: 9.4%;
-  display: flex;
-  justify-content: space-between;
-  color: #f4fbff;
-  pointer-events: none;
-}
-.hc-layer-ports svg {
-  width: clamp(15px, 2.8cqi, 20px);
-  height: clamp(18px, 3.4cqi, 24px);
-  filter: drop-shadow(0 0 2px #2085ef) drop-shadow(0 0 5px #58a6ff90);
-  animation: hc-layer-transfer 6.5s ease-in-out infinite;
-  animation-delay: calc(var(--layer-index) * -0.7s);
-}
-@keyframes hc-layer-transfer {
-  0%,
-  100% {
-    transform: translateY(-2px);
-    opacity: 0.55;
-  }
-  50% {
-    transform: translateY(2px);
-    opacity: 0.95;
-  }
-}
-
 /* Dispatch diagram: chat streaming above, asynchronous video below. */
 .hc-pipeline-box {
   position: relative;
@@ -2131,26 +1880,6 @@
   }
 }
 
-@media (max-width: 800px) {
-  .hc-architecture {
-    max-width: 640px;
-    margin: 0 auto;
-  }
-}
-@media (max-width: 480px) {
-  .hc-layer-content {
-    left: 25%;
-    right: 3%;
-    top: 20%;
-    gap: 9px;
-  }
-  .hc-layer h4 {
-    margin-bottom: 3px;
-  }
-  .hc-layer p {
-    font-size: 12px;
-  }
-}
 .hc-motion-region[data-motion='paused'] .hc-orbit-packet {
   visibility: hidden;
 }

@@ -2427,7 +2427,7 @@ const PricingCardView = ({
               className='home-model-route-chip-suffix'
               style={{ flexShrink: 1 }}
             >
-              /{renderHighlightedText(suffix)}
+              {renderHighlightedText(suffix)}
             </span>
           </button>
         );

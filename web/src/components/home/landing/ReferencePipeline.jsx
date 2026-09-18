@@ -89,7 +89,7 @@ export default function ReferencePipeline() {
           <div className='hc-flow-node hc-flow-gateway'>
             <Network size={40} aria-hidden='true' />
             <span className='hc-flow-label'>{t('02 / 智能调度')}</span>
-            <strong>{t('HonMaaS 调度网关')}</strong>
+            <strong>{t('HonMaaS 平台')}</strong>
             <small>{t('负载均衡 · 自动容灾')}</small>
           </div>
           <div className='hc-flow-node hc-flow-stream'>
