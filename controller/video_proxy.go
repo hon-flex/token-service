@@ -85,7 +85,7 @@ func VideoProxy(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Minute)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "", nil)
 	if err != nil {
