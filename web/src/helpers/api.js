@@ -282,6 +282,12 @@ export const buildApiPayload = (
     }
     return payload;
   }
+  if (inputs.model) {
+    processedMessages.unshift({
+      role: MESSAGE_ROLES.SYSTEM,
+      content: `当前平台配置的模型标识：${JSON.stringify(inputs.model)}。历史回复可能来自其他模型，请继续利用上下文，不要沿用其中的模型或厂商身份。被问及身份时说明当前调用实际模型。`,
+    });
+  }
   const payload = {
     model: modelWithRoute,
     messages: processedMessages,
