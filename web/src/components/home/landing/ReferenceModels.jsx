@@ -12,8 +12,7 @@ export default function ReferenceModels() {
   const { t } = useTranslation();
   const models = [
     {
-      name: 'DeepSeek V4',
-      id: 'deepseek-v4-flash',
+      name: 'DeepSeek',
       tone: 'deepseek',
       logo: '/brands/deepseek.svg',
       brand: 'DeepSeek',
@@ -23,8 +22,7 @@ export default function ReferenceModels() {
       scenario: t('日常问答 · 高并发服务'),
     },
     {
-      name: 'GLM 5.2',
-      id: 'glm-5.2',
+      name: 'GLM',
       tone: 'glm',
       logo: '/brands/zhipu.svg',
       brand: '智谱',
@@ -34,11 +32,10 @@ export default function ReferenceModels() {
       scenario: t('企业知识库 · Agent 规划'),
     },
     {
-      name: 'MiniMax-H3',
-      id: 'minimax-h3',
+      name: 'Minimax',
       tone: 'minimax',
       logo: '/brands/minimax.png',
-      brand: 'MiniMax',
+      brand: 'Minimax',
       tag: t('视频'),
       benefit: t('视频生成，释放创意'),
       features: [t('异步视频任务'), t('任务查询与视频下载')],
@@ -67,12 +64,12 @@ export default function ReferenceModels() {
       <div className='hc-modelgrid'>
         {models.map(
           (
-            { name, id, tone, logo, brand, tag, benefit, features, scenario },
+            { name, tone, logo, brand, tag, benefit, features, scenario },
             index,
           ) => (
             <article
               className={'hc-modelcard card-' + tone}
-              key={id}
+              key={tone}
               style={{ '--card-index': index }}
             >
               <div className='hc-model-top'>
@@ -89,7 +86,6 @@ export default function ReferenceModels() {
                 <span className='hc-flag'>{tag}</span>
               </div>
               <h3>{name}</h3>
-              <div className='hc-model-id'>{id}</div>
               <h4 className='hc-model-benefit'>{benefit}</h4>
               <ul className='hc-model-features'>
                 {features.map((feature) => (
