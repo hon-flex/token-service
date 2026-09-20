@@ -67,10 +67,12 @@
   position: absolute;
   top: var(--label-top);
   height: 6.1%;
-  left: 31%;
-  right: 9%;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 1.8cqi;
   color: #246fff;
 }
@@ -80,7 +82,7 @@
   height: 4.6cqi;
 }
 .hc-ecosystem-label h4 {
-  margin: 0 0 0.35cqi;
+  margin: 0;
   font-size: clamp(14px, 3cqi, 23px);
   font-weight: 700;
   line-height: 1.15;
@@ -408,7 +410,6 @@
 
 @media (max-width: 480px) {
   .hc-ecosystem-label {
-    left: 27%;
     gap: 1.5cqi;
   }
   .hc-ecosystem-label h4 {

@@ -129,10 +129,10 @@ export default function ReferenceHero({ systemName, docs }) {
         </h1>
         <p className='hc-hero-desc'>
           {' '}
-          {t('依托庆阳智算基础设施，接入')}{' '}
-          <b>{'deepseek-v4-flash、glm-5.2、minimax-h3'}</b>{' '}
+          {t('依托庆阳智算基础设施，接入')}
+          <b>{'DeepSeek、GLM、Minimax'}</b>
           {t(
-            '等主流大模型，统一调度、按需调用，全面兼容标准 OpenAI 协议。',
+            '等系列主流大模型，统一调度、按需调用，全面兼容标准 OpenAI 协议。',
           )}{' '}
         </p>
         <div className='hc-proof-row'>
@@ -224,7 +224,7 @@ export default function ReferenceHero({ systemName, docs }) {
           <div className='hc-cmodel-row'>
             <div className='hc-cmodel-left'>
               <span className='hc-ctag t-flash'>{t('高速')}</span>
-              <span className='hc-cname'>{'deepseek-v4-flash'}</span>
+              <span className='hc-cname'>{'DeepSeek'}</span>
             </div>
             <div className='hc-cmodel-right'>
               <span>{t('轻量高速生成')}</span>
@@ -234,7 +234,7 @@ export default function ReferenceHero({ systemName, docs }) {
           <div className='hc-cmodel-row'>
             <div className='hc-cmodel-left'>
               <span className='hc-ctag t-pro'>{t('旗舰')}</span>
-              <span className='hc-cname'>{'glm-5.2'}</span>
+              <span className='hc-cname'>{'GLM'}</span>
             </div>
             <div className='hc-cmodel-right'>
               <span>{t('智谱旗舰模型')}</span>
@@ -244,7 +244,7 @@ export default function ReferenceHero({ systemName, docs }) {
           <div className='hc-cmodel-row'>
             <div className='hc-cmodel-left'>
               <span className='hc-ctag t-long'>{t('视频')}</span>
-              <span className='hc-cname'>{'minimax-h3'}</span>
+              <span className='hc-cname'>{'Minimax'}</span>
             </div>
             <div className='hc-cmodel-right'>
               <span>{t('异步视频生成')}</span>

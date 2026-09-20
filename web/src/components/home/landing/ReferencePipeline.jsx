@@ -112,7 +112,7 @@ export default function ReferencePipeline() {
               decoding='async'
             />
             <div>
-              <strong>DeepSeek V4</strong>
+              <strong>DeepSeek</strong>
               <span>{t('高速生成')}</span>
             </div>
             <i aria-hidden='true' />
@@ -128,7 +128,7 @@ export default function ReferencePipeline() {
               decoding='async'
             />
             <div>
-              <strong>GLM 5.2</strong>
+              <strong>GLM</strong>
               <span>{t('旗舰推理')}</span>
             </div>
             <i aria-hidden='true' />
@@ -148,7 +148,7 @@ export default function ReferencePipeline() {
               decoding='async'
             />
             <div>
-              <strong>MiniMax-H3</strong>
+              <strong>Minimax</strong>
               <span>{t('视频生成')}</span>
             </div>
             <i aria-hidden='true' />

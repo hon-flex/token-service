@@ -1311,11 +1311,11 @@ export default function ArchitectureScene() {
     useSceneEntrance();
   const id = `hc-ecosystem-${useId().replace(/:/g, '')}`;
   const copy = [
-    [t('应用层'), t('千行百业「AI+」应用生态')],
-    [t('模型层'), t('阶跃星辰 · 恒星AI · 算力服务')],
-    [t('基础设施层'), t('燧弘华创算力云 · 整合与调度')],
-    [t('芯片层'), t('硬件生态 · 全生命周期服务')],
-    [t('能源层'), t('已签约 2.1GW · 在谈及筹划 5GW')],
+    t('应用层'),
+    t('模型层'),
+    t('基础设施层'),
+    t('芯片层'),
+    t('能源层'),
   ];
   return (
     <div
@@ -1388,8 +1388,7 @@ export default function ArchitectureScene() {
             >
               <Icon aria-hidden='true' strokeWidth={1.8} />
               <div>
-                <h4>{copy[index][0]}</h4>
-                <p>{copy[index][1]}</p>
+                <h4>{copy[index]}</h4>
               </div>
             </li>
           ))}
