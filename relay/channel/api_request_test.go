@@ -81,6 +81,33 @@ func TestProcessHeaderOverride_NonTestKeepsClientHeaderPlaceholder(t *testing.T)
 	require.Equal(t, "trace-123", headers["x-upstream-trace"])
 }
 
+func TestSetupApiRequestHeader_ForwardsRequestIdByDefault(t *testing.T) {
+	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+	ctx.Set(common2.RequestIdKey, "req-abc-123")
+
+	headers := http.Header{}
+	SetupApiRequestHeader(&relaycommon.RelayInfo{IsChannelTest: false}, ctx, &headers)
+	require.Equal(t, "req-abc-123", headers.Get(common2.RequestIdKey))
+}
+
+func TestSetupApiRequestHeader_RequestIdMissingOmitsHeader(t *testing.T) {
+	t.Parallel()
+
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+
+	headers := http.Header{}
+	SetupApiRequestHeader(&relaycommon.RelayInfo{IsChannelTest: false}, ctx, &headers)
+	require.Empty(t, headers.Get(common2.RequestIdKey))
+}
+
 func TestProcessHeaderOverride_RequestIdPlaceholder(t *testing.T) {
 	t.Parallel()
 
