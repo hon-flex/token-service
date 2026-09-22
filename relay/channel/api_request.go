@@ -26,6 +26,11 @@ import (
 )
 
 func SetupApiRequestHeader(info *common.RelayInfo, c *gin.Context, req *http.Header) {
+	if c != nil {
+		if requestID := strings.TrimSpace(c.GetString(common2.RequestIdKey)); requestID != "" {
+			req.Set(common2.RequestIdKey, requestID)
+		}
+	}
 	if info.RelayMode == constant.RelayModeAudioTranscription || info.RelayMode == constant.RelayModeAudioTranslation {
 		// 默认同步 ASR 为 multipart；透传/JSON URL 模式则保留客户端 Content-Type（通常为 application/json）
 		ct := c.Request.Header.Get("Content-Type")
