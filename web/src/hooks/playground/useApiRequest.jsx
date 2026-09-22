@@ -40,7 +40,8 @@ import { formatVideoTaskError } from '../../helpers/playgroundVideoUtils';
 import { getVideoTaskPlaybackUrl } from '../../helpers/videoTaskPlayback';
 
 const TASK_POLL_INTERVAL_MS = 10000;
-const TASK_POLL_MAX_ATTEMPTS = 24;
+const IMAGE_TASK_POLL_MAX_ATTEMPTS = 24;
+const VIDEO_TASK_POLL_MAX_ATTEMPTS = 60;
 
 export const useApiRequest = (
   setMessage,
@@ -119,7 +120,7 @@ export const useApiRequest = (
   const pollImageTaskUntilReady = useCallback(
     async (taskId, updateMessage) => {
       if (!taskId) return;
-      for (let i = 0; i < TASK_POLL_MAX_ATTEMPTS; i++) {
+      for (let i = 0; i < IMAGE_TASK_POLL_MAX_ATTEMPTS; i++) {
         await new Promise((resolve) =>
           setTimeout(resolve, TASK_POLL_INTERVAL_MS),
         );
@@ -180,9 +181,9 @@ export const useApiRequest = (
   const pollVideoTaskUntilReady = useCallback(
     async (taskId, updateMessage) => {
       if (!taskId) return;
-      // 最长约4分钟（10秒轮询）
+      // 最长约10分钟（10秒轮询）
       let consecutiveNetworkFailures = 0;
-      for (let i = 0; i < TASK_POLL_MAX_ATTEMPTS; i++) {
+      for (let i = 0; i < VIDEO_TASK_POLL_MAX_ATTEMPTS; i++) {
         await new Promise((resolve) =>
           setTimeout(resolve, TASK_POLL_INTERVAL_MS),
         );
