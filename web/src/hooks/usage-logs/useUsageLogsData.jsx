@@ -24,8 +24,6 @@ import { formatVideoResolutionDisplayLabel, resolveVideoBillingResolutionLabel }
 import { formatVideoUpscaleLogTag } from '../../helpers/render';
 import {
   API,
-  getLast7DaysStartTimestamp,
-  getLast7DaysEndTimestamp,
   isAdmin,
   isSupplier,
   showError,
@@ -964,19 +962,24 @@ export const useLogsData = () => {
 
   // Form state
   const [formApi, setFormApi] = useState(null);
-  const formInitValues = {
-    username: '',
-    token_name: '',
-    model_name: '',
-    channel: '',
-    group: '',
-    request_id: '',
-    dateRange: [
-      timestamp2string(getLast7DaysStartTimestamp()),
-      timestamp2string(getLast7DaysEndTimestamp()),
-    ],
-    logType: [],
-  };
+  const [formInitValues] = useState(() => {
+    const hourStart = new Date();
+    hourStart.setMinutes(0, 0, 0);
+    const startTimestamp = Math.floor(hourStart.getTime() / 1000);
+    return {
+      username: '',
+      token_name: '',
+      model_name: '',
+      channel: '',
+      group: '',
+      request_id: '',
+      dateRange: [
+        timestamp2string(startTimestamp),
+        timestamp2string(startTimestamp + 3599),
+      ],
+      logType: [],
+    };
+  });
 
   const applyRoleColumnVisibilityGuards = (columns) => {
     const next = { ...columns };
@@ -1122,8 +1125,8 @@ export const useLogsData = () => {
   const getFormValues = () => {
     const formValues = formApi ? formApi.getValues() : {};
 
-    let start_timestamp = getLast7DaysStartTimestamp();
-    let end_timestamp = getLast7DaysEndTimestamp();
+    let start_timestamp = toUnixTimestamp(formInitValues.dateRange[0]);
+    let end_timestamp = toUnixTimestamp(formInitValues.dateRange[1]);
 
     if (
       formValues.dateRange &&
@@ -1132,10 +1135,8 @@ export const useLogsData = () => {
     ) {
       const startUnix = toUnixTimestamp(formValues.dateRange[0]);
       const endUnix = toUnixTimestamp(formValues.dateRange[1]);
-      if (startUnix > 0) {
+      if (startUnix > 0 && endUnix >= startUnix) {
         start_timestamp = startUnix;
-      }
-      if (endUnix > 0) {
         end_timestamp = endUnix;
       }
     }
