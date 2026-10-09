@@ -9,10 +9,10 @@ const StorageTypeLocal = "local"
 const StorageTypeOSS = "oss"
 
 // OssSetting 文件上传配置（在控制台 运营设置 中由超级管理员配置）。
-// StorageType 控制存储后端："local"（本地磁盘，默认）或 "oss"（阿里云 OSS）。
+// StorageType 控制存储后端："local"（本地磁盘，默认）、"oss"（阿里云 OSS）或 "s3"（S3/MinIO）。
 type OssSetting struct {
-	Enabled         bool   `json:"enabled"`
-	StorageType     string `json:"storage_type"` // "local" 或 "oss"，默认 "local"
+	Enabled bool `json:"enabled"`
+	StorageType     string `json:"storage_type"` // "local"、"oss" 或 "s3"，默认 "local"
 	Endpoint        string `json:"endpoint"`     // 如 oss-cn-guangzhou.aliyuncs.com，不含协议（仅 OSS）
 	Bucket          string `json:"bucket"`
 	AccessKeyID     string `json:"access_key_id"`
@@ -72,7 +72,19 @@ func IsUploadReady() bool {
 	if s.StorageType == StorageTypeLocal {
 		return true
 	}
-	return IsOssUploadReady()
+	switch s.StorageType {
+	case StorageTypeOSS:
+		return IsOssUploadReady()
+	case StorageTypeS3:
+		cfg, err := GetS3Config()
+		if err != nil {
+			return false
+		}
+		p, err := cfg.Profile(cfg.ActiveProfileID)
+		return err == nil && ValidateS3Profile(p) == nil
+	default:
+		return false
+	}
 }
 
 // IsOssUploadReady 是否已配置完整且启用 OSS 上传。

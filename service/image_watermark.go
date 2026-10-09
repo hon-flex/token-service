@@ -335,6 +335,13 @@ func storeWatermarkedImage(data []byte, userID int) (*model.TemporaryUpload, err
 		return nil, fmt.Errorf("水印图片托管不可用，请先启用本地存储或 OSS 上传")
 	}
 	cfg := operation_setting.GetOssSetting()
+	if cfg.StorageType == operation_setting.StorageTypeS3 {
+		result, err := UploadBytesByPurpose(data, "watermark.png", "image/png", userID, UploadPurposeWatermark)
+		if err != nil {
+			return nil, err
+		}
+		return model.GetUploadObjectByID(result.FileID)
+	}
 	maxFileSizeMB := cfg.MaxFileSizeMB
 	if cfg.StorageType == operation_setting.StorageTypeLocal && cfg.LocalMaxFileSizeMB > 0 {
 		maxFileSizeMB = cfg.LocalMaxFileSizeMB

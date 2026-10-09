@@ -167,8 +167,16 @@ func finalizeMaterialUpload(userId int, fallbackGroupId, assetId, name, fallback
 	previewURL := strings.TrimSpace(tempLocalURL)
 	var previewExpiresAt int64
 	if previewURL != "" {
-		hours := operation_setting.GetMaterialPreviewRetentionHours()
-		previewExpiresAt = time.Now().Unix() + int64(hours)*3600
+		if strings.Contains(previewURL, "/api/storage/files/") {
+			upload, err := service.S3UploadFromURL(previewURL)
+			if err != nil {
+				return nil, err
+			}
+			previewExpiresAt = upload.ExpiresAt
+		} else {
+			hours := operation_setting.GetMaterialPreviewRetentionHours()
+			previewExpiresAt = time.Now().Unix() + int64(hours)*3600
+		}
 	} else {
 		previewURL = strings.TrimSpace(fallbackURL)
 		if u := strings.TrimSpace(info.URL); u != "" {
@@ -260,9 +268,10 @@ func toPersonalMaterialAssetResponse(a *model.MaterialAsset) personalMaterialAss
 // GetMaterialConfig 返回素材库前端所需配置（启用状态、上传大小上限、合规协议中英文文案及详情）。
 func GetMaterialConfig(c *gin.Context) {
 	setting := operation_setting.GetSeedanceSetting()
-	maxSize := setting.MaxImageSizeMB
-	if maxSize <= 0 {
-		maxSize = 10
+	maxSize, err := operation_setting.GetMaterialUploadLimitMB()
+	if err != nil {
+		common.ApiError(c, err)
+		return
 	}
 	common.ApiSuccess(c, gin.H{
 		"enabled":             setting.Enabled,
@@ -394,9 +403,10 @@ func UploadMaterial(c *gin.Context) {
 	}
 
 	// 大小校验：单个文件 < 配置上限（默认 10MB）。
-	maxSizeMB := operation_setting.GetSeedanceSetting().MaxImageSizeMB
-	if maxSizeMB <= 0 {
-		maxSizeMB = 10
+	maxSizeMB, err := operation_setting.GetMaterialUploadLimitMB()
+	if err != nil {
+		common.ApiError(c, err)
+		return
 	}
 	if file.Size > int64(maxSizeMB)*1024*1024 {
 		common.ApiErrorMsg(c, "文件超过大小限制（最大 "+strconv.Itoa(maxSizeMB)+"MB）")
@@ -410,7 +420,13 @@ func UploadMaterial(c *gin.Context) {
 		return
 	}
 	var publicURL string
-	if ossCfg.StorageType == operation_setting.StorageTypeLocal {
+	if ossCfg.StorageType == operation_setting.StorageTypeS3 {
+		var upload *service.UploadResult
+		upload, err = service.UploadMultipartFileByPurposeContext(c.Request.Context(), file, userId, service.UploadPurposeMaterial)
+		if upload != nil {
+			publicURL = upload.URL
+		}
+	} else if ossCfg.StorageType == operation_setting.StorageTypeLocal {
 		publicURL, err = service.LocalUploadMultipartFile(file, userId)
 	} else {
 		if !operation_setting.IsOssUploadReady() {
@@ -723,9 +739,10 @@ func UploadPersonalMaterial(c *gin.Context) {
 	}
 
 	// 大小校验：单个文件 < 配置上限（默认 10MB）。
-	maxSizeMB := operation_setting.GetSeedanceSetting().MaxImageSizeMB
-	if maxSizeMB <= 0 {
-		maxSizeMB = 10
+	maxSizeMB, err := operation_setting.GetMaterialUploadLimitMB()
+	if err != nil {
+		common.ApiError(c, err)
+		return
 	}
 	if file.Size > int64(maxSizeMB)*1024*1024 {
 		common.ApiErrorMsg(c, "文件超过大小限制（最大 "+strconv.Itoa(maxSizeMB)+"MB）")
@@ -739,7 +756,13 @@ func UploadPersonalMaterial(c *gin.Context) {
 		return
 	}
 	var publicURL string
-	if ossCfg.StorageType == operation_setting.StorageTypeLocal {
+	if ossCfg.StorageType == operation_setting.StorageTypeS3 {
+		var upload *service.UploadResult
+		upload, err = service.UploadMultipartFileByPurposeContext(c.Request.Context(), file, userId, service.UploadPurposeMaterial)
+		if upload != nil {
+			publicURL = upload.URL
+		}
+	} else if ossCfg.StorageType == operation_setting.StorageTypeLocal {
 		publicURL, err = service.LocalUploadMultipartFile(file, userId)
 	} else {
 		if !operation_setting.IsOssUploadReady() {

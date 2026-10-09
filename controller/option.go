@@ -102,6 +102,9 @@ func GetOptions(c *gin.Context) {
 	optionValues := make(map[string]string)
 	common.OptionMapRWMutex.Lock()
 	for k, v := range common.OptionMap {
+		if k == operation_setting.S3OptionKey {
+			continue
+		}
 		// YipayAppSecret 在循环结束后单独追加，以 operation_setting 为准并避免与 OptionMap 不同步
 		if k == "YipayAppSecret" {
 			continue
@@ -322,6 +325,10 @@ func UpdateOption(c *gin.Context) {
 		})
 		return
 	}
+	if option.Key == operation_setting.S3OptionKey {
+		c.JSON(http.StatusForbidden, gin.H{"success": false, "message": "请使用 S3 存储设置接口"})
+		return
+	}
 	switch v := option.Value.(type) {
 	case bool:
 		option.Value = common.Interface2String(v)
@@ -339,6 +346,20 @@ func UpdateOption(c *gin.Context) {
 		}
 	}
 	valStr := strings.TrimSpace(option.Value.(string))
+	if option.Key == "oss_setting.storage_type" {
+		if valStr != "local" && valStr != "oss" && valStr != "s3" {
+			common.ApiErrorMsg(c, "不支持的存储方式")
+			return
+		}
+		if valStr == "s3" {
+			cfg, err := operation_setting.GetS3Config()
+			p, profileErr := cfg.Profile(cfg.ActiveProfileID)
+			if err != nil || profileErr != nil || operation_setting.ValidateS3Profile(p) != nil {
+				common.ApiErrorMsg(c, "请先保存完整的 S3 配置")
+				return
+			}
+		}
+	}
 	// 已审核供应商仅可更新自己模型范围内的倍率相关配置，不可修改其他全局设置。
 	if c.GetInt("role") < common.RoleAdminUser {
 		if _, ok := supplierEditableModelOptionKeys[option.Key]; !ok {

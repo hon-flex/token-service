@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -16,6 +17,7 @@ import (
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 
 	"github.com/bytedance/gopkg/util/gopool"
+	"gorm.io/gorm"
 )
 
 const (
@@ -102,6 +104,10 @@ func IsManagedUploadURL(publicURL string) bool {
 	if publicURL == "" {
 		return false
 	}
+	if strings.Contains(publicURL, "/api/storage/files/") {
+		_, err := S3UploadFromURL(publicURL)
+		return err == nil
+	}
 	if strings.Contains(publicURL, "/"+LocalUploadFolder+"/") {
 		return true
 	}
@@ -119,6 +125,28 @@ func CleanupManagedUploadByURL(publicURL string) error {
 	publicURL = strings.TrimSpace(publicURL)
 	if publicURL == "" {
 		return nil
+	}
+	if strings.Contains(publicURL, "/api/storage/files/") {
+		rec, err := S3UploadFromURL(publicURL)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		// Material cleanup must not delete a homepage/icon/task file imported by URL.
+		if rec.Purpose != UploadPurposeMaterial {
+			return nil
+		}
+		// Persist expiration before deletion so the indexed cleaner retries failures
+		// even after the material's preview URL has been cleared (including old rows).
+		now := time.Now().Unix()
+		if rec.ExpiresAt == 0 || rec.ExpiresAt > now {
+			if err := model.UpdateUploadObjectExpiration(rec.ID, now); err != nil {
+				return err
+			}
+		}
+		return DeleteIndexedUploadObject(rec)
 	}
 	_ = CleanupLocalUploadByURL(publicURL)
 	return CleanupOssUploadByURL(publicURL)

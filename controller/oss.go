@@ -221,7 +221,7 @@ func UpdateUploadFileExpiration(c *gin.Context) {
 }
 
 // OssUpload 通用文件上传（需登录；需在运营设置中启用上传）。
-// 根据 storage_type 分发到本地存储或阿里云 OSS。
+// 根据全局 storage_type 分发到本地、阿里云 OSS 或 S3。
 func OssUpload(c *gin.Context) {
 	id := c.GetInt("id")
 	if id == 0 {
@@ -244,18 +244,37 @@ func OssUpload(c *gin.Context) {
 		return
 	}
 
+	cfg := operation_setting.GetOssSetting()
+	limitMB := max(cfg.MaxFileSizeMB, cfg.LocalMaxFileSizeMB, cfg.OssMaxFileSizeMB, 20)
+	if cfg.StorageType == operation_setting.StorageTypeS3 {
+		s3, err := operation_setting.GetS3Config()
+		if err != nil {
+			ossUploadFail(c, err.Error())
+			return
+		}
+		limitMB = s3.MaxFileSizeMB
+	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, (int64(limitMB)+1)*1024*1024)
+	if err := c.Request.ParseMultipartForm(8 * 1024 * 1024); err != nil {
+		if c.Request.MultipartForm != nil {
+			_ = c.Request.MultipartForm.RemoveAll()
+		}
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"success": false, "message": "上传请求过大或表单无效"})
+		return
+	}
+	defer c.Request.MultipartForm.RemoveAll()
 	file, err := c.FormFile("file")
 	if err != nil {
 		ossUploadFail(c, "请选择文件字段 file")
 		return
 	}
 
-	upload, err := service.UploadMultipartFileByPurpose(file, id, c.PostForm("purpose"))
+	upload, err := service.UploadMultipartFileByPurposeContext(c.Request.Context(), file, id, c.PostForm("purpose"))
 	if err != nil {
 		ossUploadFail(c, err.Error())
 		return
 	}
-	data := gin.H{"url": upload.URL}
+	data := gin.H{"url": upload.URL, "file_id": upload.FileID, "storage_type": upload.StorageType}
 	if upload.ExpiresAt > 0 {
 		data["expires_at"] = upload.ExpiresAt
 	}

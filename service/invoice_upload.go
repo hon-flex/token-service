@@ -58,6 +58,13 @@ func UploadInvoiceFile(file *multipart.FileHeader, userID int) (string, error) {
 	if !cfg.Enabled {
 		return "", fmt.Errorf("文件上传未启用，请先在运营设置中启用")
 	}
+	if cfg.StorageType == operation_setting.StorageTypeS3 {
+		result, err := UploadMultipartFileByPurpose(file, userID, UploadPurposeInvoice)
+		if err != nil {
+			return "", err
+		}
+		return result.URL, nil
+	}
 	if cfg.StorageType == operation_setting.StorageTypeLocal {
 		prefix, err := NormalizeLocalUploadPrefix(joinUploadPrefix(cfg.LocalObjectKeyPrefix, invoiceUploadSubPrefix))
 		if err != nil {
