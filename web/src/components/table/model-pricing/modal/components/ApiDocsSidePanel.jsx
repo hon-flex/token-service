@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import hljs from 'highlight.js/lib/core';
 import bash from 'highlight.js/lib/languages/bash';
@@ -34,7 +34,6 @@ import {
   Button,
   Card,
   Collapse,
-  Select,
   SideSheet,
   Space,
   Table,
@@ -51,15 +50,15 @@ import {
   IconHelpCircle,
 } from '@douyinfe/semi-icons';
 import { useTranslation } from 'react-i18next';
-import { API, copy } from '../../../../../helpers';
+import { copy } from '../../../../../helpers';
 import { StatusContext } from '../../../../../context/Status';
-import { fetchTokenKey, getServerAddress } from '../../../../../helpers/token';
 import { useIsMobile } from '../../../../../hooks/common/useIsMobile';
 import MarkdownRenderer from '../../../../common/markdown/MarkdownRenderer';
 import ApiMarkdownRenderer from '../../../../common/markdown/ApiMarkdownRenderer';
-import { h3ApiDocs, isH3VideoModel } from './h3ApiDocs';
+import { h3ApiDocs, isSoraH3Channel } from './h3ApiDocs';
 
 const { Text, Title } = Typography;
+const EXAMPLE_API_KEY = 'YOUR_APIKey';
 
 hljs.registerLanguage('bash', bash);
 hljs.registerLanguage('shell', bash);
@@ -76,12 +75,6 @@ hljs.registerLanguage('plaintext', plaintext);
 hljs.registerLanguage('text', plaintext);
 hljs.registerLanguage('python', python);
 hljs.registerLanguage('py', python);
-
-const normalizeApiBaseUrl = (baseUrl) =>
-  String(baseUrl || '').replace(
-    /^https:\/\/demo\.tokenfactoryopen\.com/i,
-    'https://tokenfactoryopen.com',
-  );
 
 const parseApiDocs = (value) => {
   if (!value) return [];
@@ -543,6 +536,8 @@ const ApiDocsSidePanel = ({
   visible,
   onClose,
   modelName,
+  channelType,
+  soraVideoMode,
   embedded = false,
   docIntroduction = '',
   docIntroductionEn = '',
@@ -555,10 +550,6 @@ const ApiDocsSidePanel = ({
   const isMobile = useIsMobile();
   const { i18n } = useTranslation();
   const [statusState] = useContext(StatusContext);
-  const [tokens, setTokens] = useState([]);
-  const [selectedTokenId, setSelectedTokenId] = useState();
-  const [resolvedTokenKeys, setResolvedTokenKeys] = useState({});
-  const tokenRequestsRef = useRef({});
   const configuredDocs = useMemo(() => parseApiDocs(apiDocs), [apiDocs]);
   const localModelDefaultDocsEnabled = useMemo(() => {
     const value = localStorage.getItem('model_default_docs_enabled');
@@ -577,7 +568,9 @@ const ApiDocsSidePanel = ({
       String(apiDocsMarkdownEn || '').trim() ||
       configuredDocs.length > 0;
     if (!hasCustomDocs && useDefaultDocs && modelDefaultDocsEnabled) {
-      return isH3VideoModel(modelName) ? [] : getDefaultApiDocs();
+      return isSoraH3Channel(channelType, soraVideoMode)
+        ? []
+        : getDefaultApiDocs();
     }
     return configuredDocs;
   }, [
@@ -589,40 +582,11 @@ const ApiDocsSidePanel = ({
     modelDefaultDocsEnabled,
     useDefaultDocs,
     modelName,
+    channelType,
+    soraVideoMode,
   ]);
 
-  const serverAddress = useMemo(() => {
-    try {
-      return normalizeApiBaseUrl(getServerAddress()).replace(/\/$/, '');
-    } catch (e) {
-      return '';
-    }
-  }, [visible]);
-
-  useEffect(() => {
-    if (!visible) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await API.get('/api/token/?p=1&size=100', {
-          skipErrorHandler: true,
-        });
-        if (!res.data?.success || cancelled) return;
-        const items = Array.isArray(res.data.data)
-          ? res.data.data
-          : res.data.data?.items || [];
-        const active = items.filter((item) => item.status === 1);
-        setTokens(active);
-        if (active.length > 0)
-          setSelectedTokenId((prev) => prev || active[0].id);
-      } catch (_) {
-        if (!cancelled) setTokens([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [visible]);
+  const serverAddress = 'https://token-service-qy.hon-maas.com';
 
   useEffect(() => {
     if (!visible || isMobile) return undefined;
@@ -632,25 +596,6 @@ const ApiDocsSidePanel = ({
     };
   }, [isMobile, visible]);
 
-  useEffect(() => {
-    if (!selectedTokenId || resolvedTokenKeys[selectedTokenId]) return;
-    if (tokenRequestsRef.current[selectedTokenId]) return;
-    tokenRequestsRef.current[selectedTokenId] = fetchTokenKey(selectedTokenId)
-      .then((key) => {
-        setResolvedTokenKeys((prev) => ({
-          ...prev,
-          [selectedTokenId]: `sk-${key}`,
-        }));
-      })
-      .catch(() => {})
-      .finally(() => {
-        delete tokenRequestsRef.current[selectedTokenId];
-      });
-  }, [selectedTokenId, resolvedTokenKeys]);
-
-  const selectedToken = selectedTokenId
-    ? resolvedTokenKeys[selectedTokenId] || 'apikey'
-    : 'apikey';
   const prefersChinese = String(
     i18n.resolvedLanguage || i18n.language || '',
   ).startsWith('zh');
@@ -664,7 +609,7 @@ const ApiDocsSidePanel = ({
     configuredDocs.length === 0 &&
     !docIntroduction &&
     !docIntroductionEn &&
-    isH3VideoModel(modelName)
+    isSoraH3Channel(channelType, soraVideoMode)
       ? h3ApiDocs
       : '');
   const selectedDocIntroduction = prefersChinese
@@ -676,10 +621,10 @@ const ApiDocsSidePanel = ({
         replaceMarkdownTemplateVariables(selectedMarkdown, {
           base_url: serverAddress,
           model: modelName,
-          api_key: selectedToken,
+          api_key: EXAMPLE_API_KEY,
         }),
       ),
-    [modelName, selectedMarkdown, selectedToken, serverAddress],
+    [modelName, selectedMarkdown, serverAddress],
   );
   const renderedDocIntroduction = useMemo(
     () =>
@@ -687,30 +632,12 @@ const ApiDocsSidePanel = ({
         replaceMarkdownTemplateVariables(selectedDocIntroduction, {
           base_url: serverAddress,
           model: modelName,
-          api_key: selectedToken,
+          api_key: EXAMPLE_API_KEY,
         }),
       ),
-    [modelName, selectedDocIntroduction, selectedToken, serverAddress],
+    [modelName, selectedDocIntroduction, serverAddress],
   );
   const hasMarkdownDocs = Boolean(renderedMarkdown.trim());
-  const markdownUsesApiKey = String(selectedMarkdown).includes('{{api_key}}');
-  const tokenSelect =
-    markdownUsesApiKey && tokens.length > 0 ? (
-      <div className='api-docs-token-select'>
-        <Select
-          size='small'
-          zIndex={1600}
-          value={selectedTokenId}
-          prefix={t('使用令牌')}
-          optionList={tokens.map((token) => ({
-            label: token.name || `${t('令牌')} #${token.id}`,
-            value: token.id,
-          }))}
-          onChange={setSelectedTokenId}
-        />
-      </div>
-    ) : null;
-  const markdownToolbar = tokenSelect;
 
   const getParamColumns = (showRequired = true) => {
     const columns = [
@@ -813,14 +740,14 @@ const ApiDocsSidePanel = ({
     const headers = isPost
       ? {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${selectedToken}`,
+          Authorization: `Bearer ${EXAMPLE_API_KEY}`,
         }
-      : { Authorization: `Bearer ${selectedToken}` };
+      : { Authorization: `Bearer ${EXAMPLE_API_KEY}` };
     const examples = buildExamples({
       method,
       endpoint: requestUrl,
       requestJson,
-      token: selectedToken,
+      token: EXAMPLE_API_KEY,
     });
 
     return (
@@ -851,7 +778,7 @@ const ApiDocsSidePanel = ({
                 replaceMarkdownTemplateVariables(api.detail, {
                   base_url: serverAddress,
                   model: modelName,
-                  api_key: selectedToken,
+                  api_key: EXAMPLE_API_KEY,
                 }),
               )}
             />
@@ -874,21 +801,6 @@ const ApiDocsSidePanel = ({
         <Card
           className='!rounded-2xl shadow-sm border-0 mb-3'
           title={t('请求头')}
-          headerExtraContent={
-            tokens.length > 0 ? (
-              <Select
-                size='small'
-                zIndex={1600}
-                value={selectedTokenId}
-                style={{ width: 180 }}
-                optionList={tokens.map((token) => ({
-                  label: token.name || `${t('令牌')} #${token.id}`,
-                  value: token.id,
-                }))}
-                onChange={setSelectedTokenId}
-              />
-            ) : null
-          }
         >
           <CodeBlock content={JSON.stringify(headers, null, 2)} t={t} />
         </Card>
@@ -975,7 +887,6 @@ const ApiDocsSidePanel = ({
         showToc
         contained
         beforeContent={markdownIntroduction}
-        toolbarContent={markdownToolbar}
       />
     </div>
   );
@@ -999,11 +910,7 @@ const ApiDocsSidePanel = ({
         </Card>
       ) : null}
       {hasMarkdownDocs ? (
-        <Card
-          className='!rounded-2xl shadow-sm border-0'
-          title={t('API 文档')}
-          headerExtraContent={markdownToolbar}
-        >
+        <Card className='!rounded-2xl shadow-sm border-0' title={t('API 文档')}>
           <ApiMarkdownRenderer content={renderedMarkdown} t={t} showToc />
         </Card>
       ) : docs.length > 0 ? (

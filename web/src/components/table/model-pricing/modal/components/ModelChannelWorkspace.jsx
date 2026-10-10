@@ -922,6 +922,8 @@ const ModelChannelWorkspace = ({
         />
         {docsMounted ? (
           <ApiDocsSidePanel
+            channelType={selectedEntry.channel.channel_type}
+            soraVideoMode={selectedEntry.channel.sora_video_mode}
             visible={docsVisible}
             onClose={() => setDocsVisible(false)}
             modelName={getChannelRouteModelName(

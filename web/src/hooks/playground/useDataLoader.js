@@ -29,6 +29,7 @@ import {
   showError,
 } from '../../helpers';
 import { API_ENDPOINTS } from '../../constants/playground.constants';
+import { resolveH3Channel } from '../../helpers/playgroundH3';
 
 /**
  * 判断「全部类型」未选（与 vendor_id=0 的已选相区分，0 为合法值）
@@ -292,6 +293,8 @@ export const useDataLoader = (
    */
   useEffect(() => {
     if (!userState?.user) {
+      if (inputs.selected_h3_channel)
+        handleInputChange('selected_h3_channel', null);
       setPlaygroundRawModels(null);
       allModelTypesRef.current = [];
       setModelTypes([]);
@@ -301,6 +304,8 @@ export const useDataLoader = (
     }
     // null 表示尚未加载；已加载的空列表也需要清空失效的模型与渠道。
     if (playgroundRawModels === null) {
+      if (inputs.selected_h3_channel)
+        handleInputChange('selected_h3_channel', null);
       setModels([]);
       setSupplierOptions([{ label: `${t('随机')} (${t('默认')})`, value: '' }]);
       return;
@@ -371,6 +376,16 @@ export const useDataLoader = (
       ? selectedModelRow.channel_options
       : [];
     const selectedRouteSlug = inputs.selected_route_slug;
+    const h3Channel = resolveH3Channel(
+      selectedModelName,
+      selectedRouteSlug,
+      supplierOptionsRaw,
+    );
+    if (
+      JSON.stringify(inputs.selected_h3_channel) !== JSON.stringify(h3Channel)
+    ) {
+      handleInputChange('selected_h3_channel', h3Channel);
+    }
     const supplierOptions = [
       { label: `${t('随机')} (${t('默认')})`, value: '' },
       ...supplierOptionsRaw
@@ -438,6 +453,7 @@ export const useDataLoader = (
     inputs.display_mode,
     inputs.selected_route_slug,
     inputs.selected_channel_type,
+    inputs.selected_h3_channel,
     t,
     setModels,
     setModelTypes,

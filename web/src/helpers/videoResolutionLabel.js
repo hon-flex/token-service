@@ -1,3 +1,5 @@
+import { getH3Settings, isPlaygroundH3 } from './playgroundH3';
+
 /**
  * 解析分辨率用于排序：返回较短边、较长边（像素级近似）；无法识别则返回 null。
  */
@@ -454,6 +456,15 @@ export function buildPlaygroundGenerationMeta(inputs = {}) {
     };
   }
   if (mode === 'video') {
+    if (isPlaygroundH3(inputs)) {
+      const h3 = getH3Settings(inputs);
+      return {
+        mode,
+        model,
+        resolution: `${h3.h3_width}x${h3.h3_height}`,
+        ratio: h3.h3_aspect_ratio,
+      };
+    }
     const resolutionOptions = buildPlaygroundVideoResolutionOptions(
       inputs.selected_video_pricing_tiers,
     );

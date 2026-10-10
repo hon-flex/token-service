@@ -75,6 +75,7 @@ export const loadConfig = () => {
         inputs: {
           ...DEFAULT_CONFIG.inputs,
           ...parsedConfig.inputs,
+          selected_h3_channel: null,
         },
         parameterEnabled: {
           ...DEFAULT_CONFIG.parameterEnabled,

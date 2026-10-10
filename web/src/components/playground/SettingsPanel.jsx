@@ -64,6 +64,8 @@ import ParameterControl from './ParameterControl';
 import VideoImageUrlInput from './VideoImageUrlInput';
 import VideoUrlInput from './VideoUrlInput';
 import AudioUrlInput from './AudioUrlInput';
+import H3Settings from './H3Settings';
+import { getH3ChannelError, isPlaygroundH3 } from '../../helpers/playgroundH3';
 
 const SECTION_KEYS = {
   BASIC: 'basic',
@@ -192,7 +194,10 @@ const AspectRatioIcon = ({ ratio }) => {
   );
 };
 
-const buildAspectRatioOptions = (t, options = PLAYGROUND_ASPECT_RATIO_OPTIONS) =>
+const buildAspectRatioOptions = (
+  t,
+  options = PLAYGROUND_ASPECT_RATIO_OPTIONS,
+) =>
   options.map((option) => ({
     value: option.value,
     label: (
@@ -249,6 +254,8 @@ const SettingsPanel = ({
   const isTextMode = displayMode === 'text';
   const isImageMode = displayMode === 'image';
   const isVideoMode = displayMode === 'video';
+  const isH3 = isVideoMode && isPlaygroundH3(inputs);
+  const h3ChannelError = isVideoMode ? getH3ChannelError(inputs) : '';
   const selectedModel = models.some((option) => option.value === inputs.model)
     ? inputs.model
     : undefined;
@@ -739,7 +746,18 @@ const SettingsPanel = ({
       return renderImageParams();
     }
     if (isVideoMode) {
-      return renderVideoParams();
+      return isH3 ? (
+        <Surface>
+          <H3Settings
+            inputs={inputs}
+            onInputChange={onInputChange}
+            disabled={customRequestMode}
+            section='params'
+          />
+        </Surface>
+      ) : (
+        renderVideoParams()
+      );
     }
     return (
       <div
@@ -758,8 +776,26 @@ const SettingsPanel = ({
 
   // Media section: text/image provide image upload; video provides image + video upload only.
   const renderMediaSection = () => {
+    if (h3ChannelError) {
+      return (
+        <Surface>
+          <Typography.Text type='warning'>{t(h3ChannelError)}</Typography.Text>
+        </Surface>
+      );
+    }
     if (isVideoMode) {
-      return renderVideoMaterial();
+      return isH3 ? (
+        <Surface>
+          <H3Settings
+            inputs={inputs}
+            onInputChange={onInputChange}
+            disabled={customRequestMode}
+            section='media'
+          />
+        </Surface>
+      ) : (
+        renderVideoMaterial()
+      );
     }
     if (isImageMode || isTextMode) {
       return renderImageMaterial();
