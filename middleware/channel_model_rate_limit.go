@@ -42,7 +42,7 @@ func channelModelRateLimitError(channel *model.Channel, modelName string) *types
 		return nil
 	}
 	message := fmt.Sprintf(
-		"平台模型限流：渠道「%s」的模型 %s 已达到 %d RPM 上限",
+		"请控制输入请求速率：渠道「%s」的模型 %s 已达到 %d RPM 上限",
 		channel.Name,
 		modelName,
 		rule.RPM,
