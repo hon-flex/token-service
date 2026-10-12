@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
@@ -14,11 +15,15 @@ func abortWithOpenAiMessage(c *gin.Context, statusCode int, message string, code
 	if len(code) > 0 {
 		codeStr = string(code[0])
 	}
+	errType := string(types.ErrorTypeTokenFactoryError)
+	if statusCode >= http.StatusBadRequest && statusCode < http.StatusInternalServerError {
+		errType = string(types.ErrorTypeUserRequestError)
+	}
 	userId := c.GetInt("id")
 	c.JSON(statusCode, gin.H{
 		"error": gin.H{
 			"message": common.MessageWithRequestId(message, c.GetString(common.RequestIdKey)),
-			"type":    "token_factory_error",
+			"type":    errType,
 			"code":    codeStr,
 		},
 	})
