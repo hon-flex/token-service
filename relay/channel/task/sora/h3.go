@@ -294,9 +294,9 @@ func writeH3Reference(ctx context.Context, writer *multipart.Writer, value, expe
 		return fmt.Errorf("invalid media URL")
 	}
 	// This client checks redirects too. No channel key or browser cookies are forwarded.
-	resp, err := service.GetOssHttpClient().Do(req)
+	resp, err := doH3MediaRequest(req, service.GetOssHttpClient(), index)
 	if err != nil {
-		return fmt.Errorf("media download failed or was blocked")
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
