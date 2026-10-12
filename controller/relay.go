@@ -469,6 +469,7 @@ func getChannel(c *gin.Context, info *relaycommon.RelayInfo, retryParam *service
 				return nil, tfErr
 			}
 			if tfErr := middleware.ChannelModelRateLimitError(ch, info.OriginModelName); tfErr != nil {
+				middleware.RecordChannelModelRateLimitLog(c, ch, info.OriginModelName, tfErr, middleware.RateLimitRetryAfterFromError(tfErr))
 				return nil, tfErr
 			}
 			service.RefreshTFRouteStickyChannel(c, ch.Id)
