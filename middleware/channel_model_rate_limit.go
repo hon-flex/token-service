@@ -15,11 +15,13 @@ import (
 
 func enforceChannelModelRateLimit(c *gin.Context, channel *model.Channel, modelName string) bool {
 	if tfErr := channelModelRateLimitError(channel, modelName); tfErr != nil {
-		if retryAfter := rateLimitRetryAfterSeconds(tfErr); retryAfter > 0 {
+		retryAfter := RateLimitRetryAfterFromError(tfErr)
+		if retryAfter > 0 {
 			c.Header("Retry-After", strconv.Itoa(retryAfter))
 			c.Header("X-RateLimit-Reset-Requests", strconv.Itoa(retryAfter))
 		}
 		c.Header("X-RateLimit-Remaining-Requests", "0")
+		RecordChannelModelRateLimitLog(c, channel, modelName, tfErr, retryAfter)
 		abortWithOpenAiMessage(c, tfErr.StatusCode, tfErr.Error(), tfErr.GetErrorCode())
 		return false
 	}
@@ -42,10 +44,9 @@ func channelModelRateLimitError(channel *model.Channel, modelName string) *types
 		return nil
 	}
 	message := fmt.Sprintf(
-		"平台模型限流：渠道「%s」的模型 %s 已达到 %d RPM 上限",
-		channel.Name,
+		"请控制输入请求速率：渠道 ID「%d」的模型 %s 已达到 RPM 上限",
+		channel.Id,
 		modelName,
-		rule.RPM,
 	)
 	tfErr := types.NewErrorWithStatusCode(
 		errors.New(message),
@@ -61,7 +62,7 @@ func ChannelModelRateLimitError(channel *model.Channel, modelName string) *types
 	return channelModelRateLimitError(channel, modelName)
 }
 
-func rateLimitRetryAfterSeconds(tfErr *types.TokenFactoryError) int {
+func RateLimitRetryAfterFromError(tfErr *types.TokenFactoryError) int {
 	if tfErr == nil || len(tfErr.Metadata) == 0 {
 		return 0
 	}
@@ -72,6 +73,36 @@ func rateLimitRetryAfterSeconds(tfErr *types.TokenFactoryError) int {
 		return 0
 	}
 	return meta.RetryAfter
+}
+
+func RecordChannelModelRateLimitLog(c *gin.Context, channel *model.Channel, modelName string, tfErr *types.TokenFactoryError, retryAfter int) {
+	if c == nil || channel == nil || tfErr == nil {
+		return
+	}
+	other := map[string]interface{}{
+		"error_type":   tfErr.GetErrorType(),
+		"error_code":   tfErr.GetErrorCode(),
+		"status_code":  tfErr.StatusCode,
+		"retry_after":  retryAfter,
+		"channel_id":   channel.Id,
+		"channel_name": channel.Name,
+		"request_path": c.Request.URL.Path,
+	}
+	message := tfErr.MaskSensitiveErrorWithStatusCode()
+	model.RecordErrorLog(
+		c,
+		c.GetInt("id"),
+		channel.Id,
+		modelName,
+		c.GetString("token_name"),
+		message,
+		c.GetInt("token_id"),
+		0,
+		false,
+		c.GetString("group"),
+		other,
+		"渠道模型限流",
+	)
 }
 
 func proceedRelayWithChannel(c *gin.Context, channel *model.Channel, modelName string) {

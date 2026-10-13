@@ -33,6 +33,7 @@ const (
 	ErrorTypeGeminiError       ErrorType = "gemini_error"
 	ErrorTypeRerankError       ErrorType = "rerank_error"
 	ErrorTypeUpstreamError     ErrorType = "upstream_error"
+	ErrorTypeUserRequestError  ErrorType = "user_request_error"
 )
 
 type ErrorCode string
@@ -313,6 +314,9 @@ func NewErrorWithStatusCode(err error, errorCode ErrorCode, statusCode int, ops 
 		StatusCode: statusCode,
 		errorCode:  errorCode,
 	}
+	if statusCode >= http.StatusBadRequest && statusCode < http.StatusInternalServerError {
+		e.errorType = ErrorTypeUserRequestError
+	}
 	for _, op := range ops {
 		op(e)
 	}
@@ -442,6 +446,12 @@ func IsSkipRetryError(err *TokenFactoryError) bool {
 func ErrOptionWithSkipRetry() TokenFactoryErrorOptions {
 	return func(e *TokenFactoryError) {
 		e.skipRetry = true
+	}
+}
+
+func ErrOptionWithErrorType(errorType ErrorType) TokenFactoryErrorOptions {
+	return func(e *TokenFactoryError) {
+		e.errorType = errorType
 	}
 }
 
