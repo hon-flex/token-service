@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import hljs from 'highlight.js/lib/core';
 import bash from 'highlight.js/lib/languages/bash';
@@ -50,7 +50,9 @@ import {
   IconHelpCircle,
 } from '@douyinfe/semi-icons';
 import { useTranslation } from 'react-i18next';
-import { copy } from '../../../../../helpers';
+import { API, copy } from '../../../../../helpers';
+import { fetchTokenKey } from '../../../../../helpers/token';
+import { UserContext } from '../../../../../context/User';
 import { StatusContext } from '../../../../../context/Status';
 import { useIsMobile } from '../../../../../hooks/common/useIsMobile';
 import MarkdownRenderer from '../../../../common/markdown/MarkdownRenderer';
@@ -58,7 +60,6 @@ import ApiMarkdownRenderer from '../../../../common/markdown/ApiMarkdownRenderer
 import { h3ApiDocs, isSoraH3Channel } from './h3ApiDocs';
 
 const { Text, Title } = Typography;
-const EXAMPLE_API_KEY = 'YOUR_APIKey';
 
 hljs.registerLanguage('bash', bash);
 hljs.registerLanguage('shell', bash);
@@ -550,6 +551,7 @@ const ApiDocsSidePanel = ({
   const isMobile = useIsMobile();
   const { i18n } = useTranslation();
   const [statusState] = useContext(StatusContext);
+  const isH3 = isSoraH3Channel(channelType, soraVideoMode);
   const configuredDocs = useMemo(() => parseApiDocs(apiDocs), [apiDocs]);
   const localModelDefaultDocsEnabled = useMemo(() => {
     const value = localStorage.getItem('model_default_docs_enabled');
@@ -567,10 +569,14 @@ const ApiDocsSidePanel = ({
       String(apiDocsMarkdown || '').trim() ||
       String(apiDocsMarkdownEn || '').trim() ||
       configuredDocs.length > 0;
+    if (
+      isH3 &&
+      (hasCustomDocs || (useDefaultDocs && modelDefaultDocsEnabled))
+    ) {
+      return h3ApiDocs;
+    }
     if (!hasCustomDocs && useDefaultDocs && modelDefaultDocsEnabled) {
-      return isSoraH3Channel(channelType, soraVideoMode)
-        ? []
-        : getDefaultApiDocs();
+      return getDefaultApiDocs();
     }
     return configuredDocs;
   }, [
@@ -581,12 +587,45 @@ const ApiDocsSidePanel = ({
     docIntroductionEn,
     modelDefaultDocsEnabled,
     useDefaultDocs,
-    modelName,
-    channelType,
-    soraVideoMode,
+    isH3,
   ]);
 
-  const serverAddress = 'https://token-service-qy.hon-maas.com';
+  const serverAddress = window.location.origin;
+  const [userState] = useContext(UserContext);
+  const userId = userState?.user?.id;
+  const [resolvedToken, setResolvedToken] = useState(null);
+  const apiKey =
+    visible && userId && resolvedToken?.userId === userId
+      ? resolvedToken.key
+      : 'YOUR_APIKey';
+
+  useEffect(() => {
+    setResolvedToken(null);
+    if (!visible || !userId) return;
+    let cancelled = false;
+    const loadApiKey = async () => {
+      const { data: response } = await API.get('/api/token/?p=1&size=10', {
+        skipErrorHandler: true,
+      });
+      if (cancelled || !response?.success) return;
+      const items = Array.isArray(response.data)
+        ? response.data
+        : response.data?.items || [];
+      const token = items.find(
+        (item) =>
+          item.status === 1 &&
+          (item.expired_time === -1 || item.expired_time > Date.now() / 1000) &&
+          (item.unlimited_quota || item.remain_quota > 0),
+      );
+      if (!token) return;
+      const key = await fetchTokenKey(token.id);
+      if (!cancelled) setResolvedToken({ userId, key: `sk-${key}` });
+    };
+    loadApiKey().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, userId]);
 
   useEffect(() => {
     if (!visible || isMobile) return undefined;
@@ -602,29 +641,22 @@ const ApiDocsSidePanel = ({
   const configuredMarkdown = prefersChinese
     ? apiDocsMarkdown || apiDocsMarkdownEn
     : apiDocsMarkdownEn || apiDocsMarkdown;
-  const selectedMarkdown =
-    configuredMarkdown ||
-    (useDefaultDocs &&
-    modelDefaultDocsEnabled &&
-    configuredDocs.length === 0 &&
-    !docIntroduction &&
-    !docIntroductionEn &&
-    isSoraH3Channel(channelType, soraVideoMode)
-      ? h3ApiDocs
-      : '');
-  const selectedDocIntroduction = prefersChinese
-    ? docIntroduction || docIntroductionEn
-    : docIntroductionEn || docIntroduction;
+  const selectedMarkdown = isH3 ? '' : configuredMarkdown;
+  const selectedDocIntroduction = isH3
+    ? ''
+    : prefersChinese
+      ? docIntroduction || docIntroductionEn
+      : docIntroductionEn || docIntroduction;
   const renderedMarkdown = useMemo(
     () =>
       normalizeLegacyApiDocsMarkdown(
         replaceMarkdownTemplateVariables(selectedMarkdown, {
           base_url: serverAddress,
           model: modelName,
-          api_key: EXAMPLE_API_KEY,
+          api_key: apiKey,
         }),
       ),
-    [modelName, selectedMarkdown, serverAddress],
+    [modelName, selectedMarkdown, serverAddress, apiKey],
   );
   const renderedDocIntroduction = useMemo(
     () =>
@@ -632,10 +664,10 @@ const ApiDocsSidePanel = ({
         replaceMarkdownTemplateVariables(selectedDocIntroduction, {
           base_url: serverAddress,
           model: modelName,
-          api_key: EXAMPLE_API_KEY,
+          api_key: apiKey,
         }),
       ),
-    [modelName, selectedDocIntroduction, serverAddress],
+    [modelName, selectedDocIntroduction, serverAddress, apiKey],
   );
   const hasMarkdownDocs = Boolean(renderedMarkdown.trim());
 
@@ -675,7 +707,12 @@ const ApiDocsSidePanel = ({
       dataIndex: 'example',
       width: 140,
       render: (val) => (
-        <Text size='small'>{replaceModelName(val, modelName)}</Text>
+        <Text
+          size='small'
+          style={isH3 ? { overflowWrap: 'anywhere' } : undefined}
+        >
+          {replaceModelName(val, modelName)}
+        </Text>
       ),
     });
     columns.push({
@@ -737,18 +774,30 @@ const ApiDocsSidePanel = ({
     const requestUrl = isPost
       ? endpoint
       : buildUrlWithQuery(endpoint, queryParams, modelName);
-    const headers = isPost
-      ? {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${EXAMPLE_API_KEY}`,
-        }
-      : { Authorization: `Bearer ${EXAMPLE_API_KEY}` };
+    const headers =
+      isPost && !api.multipart
+        ? {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          }
+        : { Authorization: `Bearer ${apiKey}` };
     const examples = buildExamples({
       method,
       endpoint: requestUrl,
       requestJson,
-      token: EXAMPLE_API_KEY,
+      token: apiKey,
     });
+    const curlExamples = (
+      api.curl_examples ||
+      (api.curl_example ? [{ id: 'curl', content: api.curl_example }] : [])
+    ).map((example) => ({
+      ...example,
+      content: replaceMarkdownTemplateVariables(example.content, {
+        base_url: serverAddress,
+        model: modelName,
+        api_key: apiKey,
+      }),
+    }));
 
     return (
       <Collapse.Panel
@@ -760,7 +809,7 @@ const ApiDocsSidePanel = ({
               {method}
             </Tag>
             <Text strong ellipsis={{ showTooltip: true }}>
-              {api.description || displayPath || `${t('API')} #${index + 1}`}
+              {t(api.description || displayPath || `${t('API')} #${index + 1}`)}
             </Text>
             <Text type='tertiary' ellipsis={{ showTooltip: true }}>
               {displayPath}
@@ -778,7 +827,7 @@ const ApiDocsSidePanel = ({
                 replaceMarkdownTemplateVariables(api.detail, {
                   base_url: serverAddress,
                   model: modelName,
-                  api_key: EXAMPLE_API_KEY,
+                  api_key: apiKey,
                 }),
               )}
             />
@@ -790,7 +839,7 @@ const ApiDocsSidePanel = ({
         >
           {renderParamTable(requestParams, true)}
         </Card>
-        {!isPost ? (
+        {!isPost && (!isH3 || queryParams.length > 0) ? (
           <Card
             className='!rounded-2xl shadow-sm border-0 mb-3'
             title={t('Query 参数说明')}
@@ -804,68 +853,103 @@ const ApiDocsSidePanel = ({
         >
           <CodeBlock content={JSON.stringify(headers, null, 2)} t={t} />
         </Card>
-        <Card
-          className='!rounded-2xl shadow-sm border-0 mb-3'
-          title={isPost ? t('请求参数示例') : t('请求链接示例')}
-        >
-          <CodeBlock
-            content={isPost ? requestJson : requestUrl}
-            language={isPost ? 'json' : 'text'}
-            t={t}
-          />
-        </Card>
+        {!curlExamples.length && (
+          <Card
+            className='!rounded-2xl shadow-sm border-0 mb-3'
+            title={isPost ? t('请求参数示例') : t('请求链接示例')}
+          >
+            <CodeBlock
+              content={isPost ? requestJson : requestUrl}
+              language={isPost ? 'json' : 'text'}
+              t={t}
+            />
+          </Card>
+        )}
         <Card
           className='!rounded-2xl shadow-sm border-0 mb-3 api-docs-request-examples-card'
           title={t('请求示例')}
         >
-          <Banner
-            type='warning'
-            className='!rounded-lg mt-3'
-            closeIcon={null}
-            description={t(
-              '建议直连本站点发起请求，关闭系统代理或 VPN，避免代理干扰模型连接与请求转发。',
-            )}
-          />
-          <Tabs type='line'>
-            {[
-              ['cURL', 'curl', 'bash'],
-              ['JavaScript', 'javascript', 'javascript'],
-              ['Go', 'go', 'go'],
-              ['Python', 'python', 'python'],
-              ['Java', 'java', 'java'],
-              ['C#', 'csharp', 'csharp'],
-            ].map(([label, key, lang]) => (
-              <Tabs.TabPane
-                tab={label}
-                itemKey={key}
-                key={key}
-                className='mt-2'
-              >
-                <CodeBlock content={examples[key]} language={lang} t={t} />
-              </Tabs.TabPane>
-            ))}
-          </Tabs>
+          {curlExamples.length ? (
+            curlExamples.length > 1 ? (
+              <Tabs type='line'>
+                {curlExamples.map((example) => (
+                  <Tabs.TabPane
+                    tab={t(example.label)}
+                    itemKey={example.id}
+                    key={example.id}
+                    className='mt-2'
+                  >
+                    <CodeBlock
+                      content={example.content}
+                      language='bash'
+                      t={t}
+                    />
+                  </Tabs.TabPane>
+                ))}
+              </Tabs>
+            ) : (
+              <CodeBlock
+                content={curlExamples[0].content}
+                language='bash'
+                t={t}
+              />
+            )
+          ) : (
+            <>
+              <Banner
+                type='warning'
+                className='!rounded-lg mt-3'
+                closeIcon={null}
+                description={t(
+                  '建议直连本站点发起请求，关闭系统代理或 VPN，避免代理干扰模型连接与请求转发。',
+                )}
+              />
+              <Tabs type='line'>
+                {[
+                  ['cURL', 'curl', 'bash'],
+                  ['JavaScript', 'javascript', 'javascript'],
+                  ['Go', 'go', 'go'],
+                  ['Python', 'python', 'python'],
+                  ['Java', 'java', 'java'],
+                  ['C#', 'csharp', 'csharp'],
+                ].map(([label, key, lang]) => (
+                  <Tabs.TabPane
+                    tab={label}
+                    itemKey={key}
+                    key={key}
+                    className='mt-2'
+                  >
+                    <CodeBlock content={examples[key]} language={lang} t={t} />
+                  </Tabs.TabPane>
+                ))}
+              </Tabs>
+            </>
+          )}
         </Card>
-        <Card
-          className='!rounded-2xl shadow-sm border-0 mb-3'
-          title={t('返回数据结构说明')}
-        >
-          {renderParamTable(responseParams, false)}
-        </Card>
-        <Card
-          className='!rounded-2xl shadow-sm border-0 mb-3'
-          title={t('返回数据示例')}
-        >
-          <CodeBlock
-            content={JSON.stringify(
-              buildJsonExample(responseParams, modelName),
-              null,
-              2,
-            )}
-            language='json'
-            t={t}
-          />
-        </Card>
+        {(!isH3 || responseParams.length > 0) && (
+          <>
+            <Card
+              className='!rounded-2xl shadow-sm border-0 mb-3'
+              title={t('返回数据结构说明')}
+            >
+              {renderParamTable(responseParams, false)}
+            </Card>
+            <Card
+              className='!rounded-2xl shadow-sm border-0 mb-3'
+              title={t('返回数据示例')}
+            >
+              <CodeBlock
+                content={JSON.stringify(
+                  buildJsonExample(responseParams, modelName),
+                  null,
+                  2,
+                )}
+                language='json'
+                t={t}
+              />
+            </Card>
+          </>
+        )}
       </Collapse.Panel>
     );
   };

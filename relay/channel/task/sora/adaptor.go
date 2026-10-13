@@ -290,7 +290,15 @@ func (a *TaskAdaptor) DoResponse(c *gin.Context, resp *http.Response, info *rela
 	dResp.ID = info.PublicTaskID
 	dResp.TaskID = info.PublicTaskID
 
-	c.JSON(http.StatusOK, dResp)
+	// Keep public IDs for polling; expose the direct upstream ID only for H3.
+	upstreamTaskID := ""
+	if a.h3Enabled {
+		upstreamTaskID = upstreamID
+	}
+	c.JSON(http.StatusOK, struct {
+		responseTask
+		UpstreamTaskID string `json:"upstream_task_id,omitempty"`
+	}{dResp, upstreamTaskID})
 	return upstreamID, responseBody, nil
 }
 
@@ -463,6 +471,18 @@ func (a *TaskAdaptor) ConvertToOpenAIVideo(task *model.Task) ([]byte, error) {
 	var err error
 	if data, err = sjson.SetBytes(data, "id", task.TaskID); err != nil {
 		return nil, errors.Wrap(err, "set id failed")
+	}
+	// Fetch converters are not initialized with RelayInfo. Resolve the task's
+	// channel so existing H3 tasks also expose their persisted upstream ID.
+	if task.ChannelId > 0 {
+		channel, channelErr := model.CacheGetChannel(task.ChannelId)
+		if channelErr == nil && channel.GetSetting().IsSoraH3(channel.Type) {
+			if upstreamID := task.GetUpstreamTaskID(); upstreamID != "" {
+				if data, err = sjson.SetBytes(data, "upstream_task_id", upstreamID); err != nil {
+					return nil, errors.Wrap(err, "set upstream task id failed")
+				}
+			}
+		}
 	}
 	// 状态以 task.Status 为准，避免 task.Data 过期导致下游状态不一致
 	if status := task.Status.ToVideoStatus(); status != "" {
