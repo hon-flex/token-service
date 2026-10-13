@@ -39,6 +39,7 @@ import {
   toBoolean,
 } from '../../../helpers';
 import UploadFileManager from './UploadFileManager';
+import SettingsS3Storage from './SettingsS3Storage';
 
 const { Text } = Typography;
 
@@ -48,6 +49,7 @@ const UPLOAD_MODE_OPTIONS = [
   { label: '关闭文件上传', value: UPLOAD_MODE_DISABLED },
   { label: '本地存储', value: 'local' },
   { label: '阿里云 OSS', value: 'oss' },
+  { label: 'S3（MinIO）', value: 's3' },
 ];
 
 const PLAYGROUND_RETENTION_OPTIONS = [
@@ -182,7 +184,11 @@ function isBlank(value) {
 }
 
 function storageLabel(type, t) {
-  return type === 'oss' ? t('阿里云 OSS') : t('本地存储');
+  return type === 's3'
+    ? t('S3（MinIO）')
+    : type === 'oss'
+      ? t('阿里云 OSS')
+      : t('本地存储');
 }
 
 function requiredLabel(label) {
@@ -228,6 +234,11 @@ function pickKeys(source, keys) {
 export default function SettingsOss(props) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [s3Status, setS3Status] = useState({
+    ready: false,
+    dirty: false,
+    busy: false,
+  });
   const [inputs, setInputs] = useState(BASE_INPUTS);
   const [inputsRow, setInputsRow] = useState(BASE_INPUTS);
   const [testLoading, setTestLoading] = useState(false);
@@ -363,6 +374,13 @@ export default function SettingsOss(props) {
   }
 
   function validateConfigForStorage(storageType, snapshot = getFormSnapshot()) {
+    if (storageType === 's3') {
+      if (!s3Status.ready || s3Status.dirty || s3Status.busy) {
+        showWarning(t('请先保存完整的 S3 配置'));
+        return false;
+      }
+      return true;
+    }
     if (storageType === 'oss') {
       const requiredFields = [
         ['oss_setting.endpoint', t('Endpoint')],
@@ -427,6 +445,7 @@ export default function SettingsOss(props) {
     storageType,
     snapshot = getFormSnapshot(),
   ) {
+    if (storageType === 's3') return s3Status.dirty;
     const targetConfigKeys =
       storageType === 'oss' ? OSS_CONFIG_KEYS : LOCAL_CONFIG_KEYS;
     return compareObjects(snapshot, inputsRow).some((item) =>
@@ -505,19 +524,29 @@ export default function SettingsOss(props) {
     }
     setLoading(true);
     try {
-      const res = await Promise.all(
-        changes.map((item) => {
+      const res = await (async () => {
+        const responses = [];
+        // Store the backend before enabling it, and stop on failure.
+        const ordered = [...changes].sort(
+          (a, b) =>
+            Number(a.key === 'oss_setting.enabled') -
+            Number(b.key === 'oss_setting.enabled'),
+        );
+        for (const item of ordered) {
           const rawValue = sourceInputs[item.key];
           const value =
             typeof rawValue === 'boolean' || typeof rawValue === 'number'
               ? String(rawValue)
               : rawValue;
-          return API.put('/api/option/', {
+          const response = await API.put('/api/option/', {
             key: item.key,
             value,
           });
-        }),
-      );
+          responses.push(response);
+          if (!response?.data?.success) break;
+        }
+        return responses;
+      })();
       const failed = res.find((item) => item?.data?.success === false);
       if (failed) {
         showError(failed?.data?.message || t('保存失败，请重试'));
@@ -635,7 +664,7 @@ export default function SettingsOss(props) {
       const snapshot = getFormSnapshot();
       if (!validateCurrentConfig(snapshot)) return;
       if (selectedUploadMode === UPLOAD_MODE_DISABLED) {
-        showWarning(t('请先在上方下拉框选择本地存储或阿里云 OSS 并应用'));
+        showWarning(t('请先选择存储方式并应用'));
         return;
       }
       if (hasUnsavedConfig(snapshot)) {
@@ -747,9 +776,11 @@ export default function SettingsOss(props) {
         </Col>
         <Col>
           <Text type='tertiary' size='small'>
-            {selectedStorageType === 'oss'
-              ? t('将使用阿里云 OSS 配置测试')
-              : t('将使用本地存储配置测试')}
+            {selectedStorageType === 's3'
+              ? t('将使用 S3 配置测试')
+              : selectedStorageType === 'oss'
+                ? t('将使用阿里云 OSS 配置测试')
+                : t('将使用本地存储配置测试')}
           </Text>
         </Col>
       </Row>
@@ -1084,6 +1115,7 @@ export default function SettingsOss(props) {
     if (selectedUploadMode === UPLOAD_MODE_DISABLED) {
       return renderDisabledConfig();
     }
+    if (selectedStorageType === 's3') return null;
     return selectedStorageType === 'oss'
       ? renderOssConfig()
       : renderLocalConfig();
@@ -1164,6 +1196,7 @@ export default function SettingsOss(props) {
                   }}
                 >
                   <Select
+                    disabled={loading || s3Status.busy}
                     value={selectedUploadMode}
                     optionList={UPLOAD_MODE_OPTIONS.map((item) => ({
                       ...item,
@@ -1183,6 +1216,23 @@ export default function SettingsOss(props) {
 
           {renderSelectedConfig()}
         </Form>
+        <SettingsS3Storage
+          visible={selectedUploadMode === 's3'}
+          onStatus={setS3Status}
+          onApply={() =>
+            saveKeys(APPLICATION_KEYS, {
+              overrides: {
+                'oss_setting.enabled': true,
+                'oss_setting.storage_type': 's3',
+              },
+              successMessage: t('已使用{{type}}作为存储', {
+                type: t('S3（MinIO）'),
+              }),
+            })
+          }
+        >
+          {renderTestPanel()}
+        </SettingsS3Storage>
         {appliedUploadMode === 'local' ? <UploadFileManager /> : null}
       </>
     </Spin>

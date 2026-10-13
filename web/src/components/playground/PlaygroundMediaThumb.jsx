@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal } from '@douyinfe/semi-ui';
 import { Film, Image as ImageIcon, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import PlaygroundMediaEmpty from './PlaygroundMediaEmpty';
 import { useResolvedPlaygroundPreviewUrl } from '../../helpers/playgroundMediaPreview';
 
 const PlaygroundMediaThumb = ({ value, kind = 'image', disabled = false }) => {
@@ -25,6 +26,8 @@ const PlaygroundMediaThumb = ({ value, kind = 'image', disabled = false }) => {
     setFailed(false);
     setOpen(false);
   }, [src]);
+
+  if (failed) return <PlaygroundMediaEmpty kind={kind} compact />;
 
   const placeholder = (
     <span className='playground-media-thumb-placeholder'>
@@ -88,6 +91,7 @@ const PlaygroundMediaThumb = ({ value, kind = 'image', disabled = false }) => {
             <video
               src={src}
               controls
+              onError={() => setFailed(true)}
               autoPlay
               playsInline
               className='playground-media-thumb-lightbox-media'
@@ -96,6 +100,7 @@ const PlaygroundMediaThumb = ({ value, kind = 'image', disabled = false }) => {
             <img
               src={src}
               alt={t('图片预览')}
+              onError={() => setFailed(true)}
               className='playground-media-thumb-lightbox-media'
             />
           )

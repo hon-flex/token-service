@@ -951,7 +951,7 @@ func testChannelVideo(c *gin.Context, channel *model.Channel, testModel string, 
 			"seconds": "4",
 		}
 		// Self-hosted H3 requires an explicit aspect ratio even when size is supplied.
-		if strings.EqualFold(upstreamModel, "minimax-h3") {
+		if channel.GetSetting().IsSoraH3(channel.Type) {
 			bodyMap["aspect_ratio"] = "9:16"
 		}
 	case constant.EndpointTypeTencentCloudVODVideo:

@@ -1,14 +1,24 @@
 package dto
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/QuantumNous/new-api/constant"
+)
 
 type ChannelSettings struct {
+	SoraVideoMode          string `json:"sora_video_mode,omitempty"`
 	ForceFormat            bool   `json:"force_format,omitempty"`
 	ThinkingToContent      bool   `json:"thinking_to_content,omitempty"`
 	Proxy                  string `json:"proxy"`
 	PassThroughBodyEnabled bool   `json:"pass_through_body_enabled,omitempty"`
 	SystemPrompt           string `json:"system_prompt,omitempty"`
 	SystemPromptOverride   bool   `json:"system_prompt_override,omitempty"`
+}
+
+// IsSoraH3 enables the H3 protocol only for an explicitly configured Sora channel.
+func (s ChannelSettings) IsSoraH3(channelType int) bool {
+	return channelType == constant.ChannelTypeSora && s.SoraVideoMode == "h3"
 }
 
 type VertexKeyType string

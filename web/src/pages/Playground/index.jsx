@@ -47,6 +47,7 @@ import {
   getDefaultMessages,
 } from '../../constants/playground.constants';
 import { appendUploadedMediaUrl } from '../../helpers/playgroundMediaInputUtils';
+import { getH3ChannelError, isPlaygroundH3 } from '../../helpers/playgroundH3';
 import {
   assertExclusiveVideoImagePayload,
   getPlaygroundSidebarImageField,
@@ -641,6 +642,13 @@ const Playground = () => {
   // 发送消息（副作用放在 setState 外，避免 StrictMode 重复执行 updater 导致多次请求）
   const onMessageSend = useCallback(
     (content, attachment, options = {}) => {
+      if (inputs.display_mode === 'video') {
+        const channelError = getH3ChannelError(inputs);
+        if (channelError) {
+          Toast.warning(t(channelError));
+          return;
+        }
+      }
       const baseMessages = Array.isArray(options.baseMessages)
         ? options.baseMessages
         : null;
@@ -940,6 +948,10 @@ const Playground = () => {
   const handlePasteImage = useCallback(
     (base64Data) => {
       const mode = inputs.display_mode || 'text';
+      if (mode === 'video' && isPlaygroundH3(inputs)) {
+        Toast.warning(t('H3 素材请在媒体面板上传'));
+        return;
+      }
       if (mode !== 'image' && mode !== 'video') {
         return;
       }
@@ -972,7 +984,9 @@ const Playground = () => {
   const playgroundContextValue = {
     onPasteImage: handlePasteImage,
     imageUrls: getPlaygroundSidebarImageUrls(inputs),
-    imageEnabled: ['image', 'video'].includes(inputs.display_mode || 'text'),
+    imageEnabled:
+      ['image', 'video'].includes(inputs.display_mode || 'text') &&
+      !(inputs.display_mode === 'video' && isPlaygroundH3(inputs)),
   };
 
   return (

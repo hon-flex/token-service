@@ -1879,6 +1879,8 @@ const ModelChannelList = ({
       ) : null}
       {docsMounted ? (
         <ApiDocsSidePanel
+          channelType={docsChannel?.channel_type}
+          soraVideoMode={docsChannel?.sora_video_mode}
           visible={docsVisible}
           onClose={() => {
             setDocsVisible(false);

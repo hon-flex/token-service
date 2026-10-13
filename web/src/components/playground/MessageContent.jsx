@@ -27,6 +27,7 @@ import {
 } from '@douyinfe/semi-ui';
 import MarkdownRenderer from '../common/markdown/MarkdownRenderer';
 import ThinkingContent from './ThinkingContent';
+import PlaygroundMediaEmpty from './PlaygroundMediaEmpty';
 import PlaygroundGeneratedImageGallery from './PlaygroundGeneratedImageGallery';
 import VideoDownloadButton from './VideoDownloadButton';
 import { getVideoTaskPlaybackUrl } from '../../helpers/videoTaskPlayback';
@@ -179,6 +180,11 @@ const MessageContent = ({
   const previousContentLengthRef = useRef(0);
   const lastContentRef = useRef('');
   const [previewImageUrl, setPreviewImageUrl] = useState('');
+  const [failedMediaUrls, setFailedMediaUrls] = useState(() => new Set());
+  const handleMediaError = (url) => {
+    setFailedMediaUrls((prev) => new Set(prev).add(url));
+    onRevealProgress?.();
+  };
   const [loadedMediaUrls, setLoadedMediaUrls] = useState(() => new Set());
   const [loadedMediaDimensions, setLoadedMediaDimensions] = useState({});
 
@@ -360,6 +366,8 @@ const MessageContent = ({
     : rawGeneratedImages;
   const mediaDimensions = message.mediaDimensions || {};
   const videoPlayableUrl = getVideoTaskPlaybackUrl(message?.videoTask);
+  const hasVideo = message.role === 'assistant' && Boolean(videoPlayableUrl);
+  const videoFailed = failedMediaUrls.has(videoPlayableUrl);
   const mergedMediaDimensions = {
     ...mediaDimensions,
     ...loadedMediaDimensions,
@@ -442,7 +450,12 @@ const MessageContent = ({
           </div>
         )}
 
-        {message.role === 'assistant' && videoPlayableUrl && (
+        {hasVideo && videoFailed && (
+          <div className='mb-3'>
+            <PlaygroundMediaEmpty kind='video' />
+          </div>
+        )}
+        {hasVideo && !videoFailed && (
           <div
             className='relative rounded-lg overflow-hidden'
             style={{
@@ -472,6 +485,7 @@ const MessageContent = ({
             <video
               controls
               src={videoPlayableUrl}
+              onError={() => handleMediaError(videoPlayableUrl)}
               className='block rounded-lg border bg-gray-50'
               style={{
                 width: constrainedVideoSize.width
@@ -519,7 +533,7 @@ const MessageContent = ({
           </div>
         )}
 
-        {message.role === 'assistant' && videoPlayableUrl && (
+        {hasVideo && (
           <VideoDownloadButton
             task={message.videoTask}
             videoUrl={videoPlayableUrl}
@@ -606,8 +620,14 @@ const MessageContent = ({
               const imageContents = message.content.filter(
                 (item) => item.type === 'image_url',
               );
-              const hasLoadedImageContents = imageContents.some((imgItem) =>
-                loadedMediaUrls.has(imgItem.image_url.url),
+              const hasLoadedImageContents = imageContents.some(
+                (imgItem) =>
+                  loadedMediaUrls.has(imgItem.image_url.url) ||
+                  failedMediaUrls.has(
+                    assetMap
+                      ? resolveAssetUriToUrl(imgItem.image_url.url, assetMap)
+                      : imgItem.image_url.url,
+                  ),
               );
 
               return (
@@ -628,6 +648,9 @@ const MessageContent = ({
                         const imageUrl = assetMap
                           ? resolveAssetUriToUrl(rawImageUrl, assetMap)
                           : rawImageUrl;
+                        if (failedMediaUrls.has(imageUrl)) {
+                          return <PlaygroundMediaEmpty key={index} />;
+                        }
                         const constrainedImageSize = getConstrainedMediaSize(
                           mergedMediaDimensions[imageUrl],
                           PLAYGROUND_MEDIA_MAX_WIDTH_PX,
@@ -705,17 +728,8 @@ const MessageContent = ({
                                 );
                               }}
                               onClick={() => setPreviewImageUrl(imageUrl)}
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'block';
-                              }}
+                              onError={() => handleMediaError(imageUrl)}
                             />
-                            <div
-                              className='text-red-500 text-sm p-2 bg-red-50 rounded-lg border border-red-200'
-                              style={{ display: 'none' }}
-                            >
-                              图片加载失败: {imageUrl}
-                            </div>
                           </div>
                         );
                       })}

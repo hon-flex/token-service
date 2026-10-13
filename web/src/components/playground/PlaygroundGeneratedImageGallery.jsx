@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React, { useState } from 'react';
+import PlaygroundMediaEmpty from './PlaygroundMediaEmpty';
 import { Typography } from '@douyinfe/semi-ui';
 import { useTranslation } from 'react-i18next';
 import {
@@ -50,11 +51,14 @@ const PlaygroundGeneratedImageGallery = ({
   const { t } = useTranslation();
   const resolvedMaxHeightPx = usePlaygroundMediaMaxHeightPx();
   const mediaMaxHeightPx = maxHeightPx ?? resolvedMaxHeightPx;
+  const [failedUrls, setFailedUrls] = useState(() => new Set());
   const [loadedUrls, setLoadedUrls] = useState(() => new Set());
   const [loadedDimensions, setLoadedDimensions] = useState({});
   const list = Array.isArray(images) ? images.filter(Boolean) : [];
   if (!list.length) return null;
-  const hasLoadedImages = list.some((src) => loadedUrls.has(src));
+  const hasLoadedImages = list.some(
+    (src) => loadedUrls.has(src) || failedUrls.has(src),
+  );
 
   const gridClass =
     list.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2';
@@ -82,6 +86,10 @@ const PlaygroundGeneratedImageGallery = ({
         }}
       >
         {list.map((src, index) => {
+          if (failedUrls.has(src))
+            return (
+              <PlaygroundMediaEmpty key={`${index}-${src.slice(0, 32)}`} />
+            );
           const constrainedSize = getConstrainedMediaSize(
             loadedDimensions[src] || dimensions[src],
             PLAYGROUND_MEDIA_MAX_WIDTH_PX,
@@ -134,6 +142,10 @@ const PlaygroundGeneratedImageGallery = ({
                   transitionDelay: loadedUrls.has(src) ? '200ms' : '0ms',
                 }}
                 loading='lazy'
+                onError={() => {
+                  setFailedUrls((prev) => new Set(prev).add(src));
+                  onRevealProgress?.();
+                }}
                 onLoad={(event) => {
                   const nextDimensions = {
                     width: event.currentTarget.naturalWidth,

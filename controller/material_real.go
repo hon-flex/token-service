@@ -413,9 +413,10 @@ func UploadRealMaterial(c *gin.Context) {
 		common.ApiErrorMsg(c, materialUploadTypeHint)
 		return
 	}
-	maxSizeMB := operation_setting.GetSeedanceSetting().MaxImageSizeMB
-	if maxSizeMB <= 0 {
-		maxSizeMB = 10
+	maxSizeMB, err := operation_setting.GetMaterialUploadLimitMB()
+	if err != nil {
+		common.ApiError(c, err)
+		return
 	}
 	if file.Size > int64(maxSizeMB)*1024*1024 {
 		common.ApiErrorMsg(c, "文件超过大小限制（最大 "+strconv.Itoa(maxSizeMB)+"MB）")
@@ -427,7 +428,13 @@ func UploadRealMaterial(c *gin.Context) {
 		return
 	}
 	var publicURL string
-	if ossCfg.StorageType == operation_setting.StorageTypeLocal {
+	if ossCfg.StorageType == operation_setting.StorageTypeS3 {
+		var upload *service.UploadResult
+		upload, err = service.UploadMultipartFileByPurposeContext(c.Request.Context(), file, userId, service.UploadPurposeMaterial)
+		if upload != nil {
+			publicURL = upload.URL
+		}
+	} else if ossCfg.StorageType == operation_setting.StorageTypeLocal {
 		publicURL, err = service.LocalUploadMultipartFile(file, userId)
 	} else {
 		if !operation_setting.IsOssUploadReady() {

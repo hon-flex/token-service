@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"mime"
 	"mime/multipart"
@@ -24,6 +25,8 @@ func playgroundUploadRetention(hours int) time.Duration {
 }
 
 const (
+	UploadPurposeMaterial = "material"
+	UploadPurposeInvoice     = "invoice"
 	UploadPurposeGeneral     = "general"
 	UploadPurposeHomepage    = "homepage"
 	UploadPurposeIcons       = "icons"
@@ -41,6 +44,8 @@ type uploadPurposeSpec struct {
 }
 
 var uploadPurposeSpecs = map[string]uploadPurposeSpec{
+	UploadPurposeMaterial: {directory: "temporary/material"},
+	UploadPurposeInvoice:     {directory: "permanent/invoices"},
 	UploadPurposeGeneral:     {directory: "permanent/general"},
 	UploadPurposeHomepage:    {directory: "permanent/homepage"},
 	UploadPurposeIcons:       {directory: "permanent/icons"},
@@ -52,6 +57,7 @@ var uploadPurposeSpecs = map[string]uploadPurposeSpec{
 }
 
 type UploadResult struct {
+	FileID       int64
 	Purpose      string
 	OriginalName string
 	MimeType     string
@@ -92,6 +98,10 @@ func resolveUploadPurpose(raw string) (string, uploadPurposeSpec, error) {
 // UploadMultipartFileByPurpose stores a file in a fixed purpose namespace.
 // Only Playground uploads receive an expiration record; all other purposes are permanent.
 func UploadMultipartFileByPurpose(file *multipart.FileHeader, userID int, rawPurpose string) (*UploadResult, error) {
+	return UploadMultipartFileByPurposeContext(context.Background(), file, userID, rawPurpose)
+}
+
+func UploadMultipartFileByPurposeContext(ctx context.Context, file *multipart.FileHeader, userID int, rawPurpose string) (*UploadResult, error) {
 	purposeName, purpose, err := resolveUploadPurpose(rawPurpose)
 	if err != nil {
 		return nil, err
@@ -101,6 +111,13 @@ func UploadMultipartFileByPurpose(file *multipart.FileHeader, userID int, rawPur
 		return nil, fmt.Errorf("文件上传未启用，请先在运营设置中启用")
 	}
 
+	if cfg.StorageType == operation_setting.StorageTypeS3 {
+		s3, err := operation_setting.GetS3Config()
+		if err != nil {
+			return nil, err
+		}
+		return UploadS3ByPurpose(ctx, file, userID, s3, purposeName)
+	}
 	var result *UploadResult
 	if cfg.StorageType == operation_setting.StorageTypeLocal {
 		prefix, normalizeErr := NormalizeLocalUploadPrefix(joinUploadPrefix(cfg.LocalObjectKeyPrefix, purpose.directory))
@@ -108,12 +125,14 @@ func UploadMultipartFileByPurpose(file *multipart.FileHeader, userID int, rawPur
 			return nil, normalizeErr
 		}
 		result, err = localUploadMultipartFileWithPrefixResult(file, userID, prefix)
-	} else {
+	} else if cfg.StorageType == operation_setting.StorageTypeOSS {
 		if !operation_setting.IsOssUploadReady() {
 			return nil, ErrOssNotConfigured
 		}
 		prefix := joinUploadPrefix(cfg.ObjectKeyPrefix, purpose.directory)
 		result, err = ossUploadMultipartFileWithPrefixResult(file, userID, prefix)
+	} else {
+		return nil, fmt.Errorf("不支持的存储方式")
 	}
 	if err != nil {
 		return nil, err
@@ -154,6 +173,7 @@ func UploadMultipartFileByPurpose(file *multipart.FileHeader, userID int, rawPur
 		}
 		return nil, fmt.Errorf("记录上传文件失败: %w", err)
 	}
+	result.FileID = record.ID
 	return result, nil
 }
 

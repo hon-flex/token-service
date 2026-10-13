@@ -65,12 +65,14 @@ type responseTask struct {
 type TaskAdaptor struct {
 	taskcommon.BaseBilling
 	ChannelType int
+	h3Enabled   bool
 	apiKey      string
 	baseURL     string
 }
 
 func (a *TaskAdaptor) Init(info *relaycommon.RelayInfo) {
 	a.ChannelType = info.ChannelType
+	a.h3Enabled = info.ChannelSetting.IsSoraH3(info.ChannelType)
 	a.baseURL = info.ChannelBaseUrl
 	a.apiKey = info.ApiKey
 }
@@ -92,7 +94,15 @@ func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycom
 	if info.Action == constant.TaskActionRemix {
 		return validateRemixRequest(c)
 	}
-	return relaycommon.ValidateMultipartDirect(c, info)
+	if taskErr = relaycommon.ValidateMultipartDirect(c, info); taskErr != nil {
+		return taskErr
+	}
+	if a.h3Enabled {
+		if err := normalizeH3BillingRequest(c, info); err != nil {
+			return service.TaskErrorWrapperLocal(err, "invalid_request", http.StatusBadRequest)
+		}
+	}
+	return nil
 }
 
 // EstimateBilling 根据用户请求的 seconds 和 size 计算 OtherRatios。
@@ -159,7 +169,7 @@ func (a *TaskAdaptor) BuildRequestBody(c *gin.Context, info *relaycommon.RelayIn
 		var bodyMap map[string]interface{}
 		if err := common.Unmarshal(cachedBody, &bodyMap); err == nil {
 			bodyMap["model"] = info.UpstreamModelName
-			if strings.EqualFold(info.UpstreamModelName, "minimax-h3") && info.Action != constant.TaskActionRemix {
+			if a.h3Enabled && info.Action != constant.TaskActionRemix {
 				return buildH3Form(c, bodyMap)
 			}
 			if newBody, err := common.Marshal(bodyMap); err == nil {
@@ -225,6 +235,26 @@ func (a *TaskAdaptor) BuildRequestBody(c *gin.Context, info *relaycommon.RelayIn
 
 // DoRequest delegates to common helper.
 func (a *TaskAdaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, requestBody io.Reader) (*http.Response, error) {
+	if body, ok := requestBody.(*h3FormBody); ok {
+		defer body.cleanup()
+		defer c.Request.Header.Set("Content-Type", body.originalContentType)
+		requestURL, err := a.BuildRequestURL(info)
+		if err != nil {
+			return nil, err
+		}
+		req, err := http.NewRequestWithContext(c.Request.Context(), http.MethodPost, requestURL, io.NewSectionReader(body.File, 0, body.size))
+		if err != nil {
+			return nil, err
+		}
+		req.ContentLength = body.size
+		req.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(io.NewSectionReader(body.File, 0, body.size)), nil
+		}
+		if err = a.BuildRequestHeader(c, req, info); err != nil {
+			return nil, err
+		}
+		return channel.DoRequest(c, req, info)
+	}
 	return channel.DoTaskApiRequest(a, c, info, requestBody)
 }
 
@@ -260,7 +290,15 @@ func (a *TaskAdaptor) DoResponse(c *gin.Context, resp *http.Response, info *rela
 	dResp.ID = info.PublicTaskID
 	dResp.TaskID = info.PublicTaskID
 
-	c.JSON(http.StatusOK, dResp)
+	// Keep public IDs for polling; expose the direct upstream ID only for H3.
+	upstreamTaskID := ""
+	if a.h3Enabled {
+		upstreamTaskID = upstreamID
+	}
+	c.JSON(http.StatusOK, struct {
+		responseTask
+		UpstreamTaskID string `json:"upstream_task_id,omitempty"`
+	}{dResp, upstreamTaskID})
 	return upstreamID, responseBody, nil
 }
 
@@ -297,6 +335,52 @@ func (a *TaskAdaptor) GetChannelName() string {
 
 // buildH3Form translates the playground's JSON video parameters to the self-hosted H3 form API.
 func buildH3Form(c *gin.Context, fields map[string]interface{}) (io.Reader, error) {
+	if _, exists := fields["input_references"]; exists {
+		return buildH3ReferenceForm(c, fields)
+	}
+	// H3 expects JSON-encoded image_reference objects in the multipart form;
+	// the playground's generic image fields are not recognized by the upstream.
+	// Preserve an explicitly supplied native field (including JSON strings).
+	if _, exists := fields["image_reference"]; !exists {
+		var images struct {
+			Images        []string `json:"images"`
+			FirstFrameURL string   `json:"first_frame_url"`
+			LastFrameURL  string   `json:"last_frame_url"`
+			Metadata      struct {
+				FirstFrameURL string `json:"first_frame_url"`
+				LastFrameURL  string `json:"last_frame_url"`
+			} `json:"metadata"`
+		}
+		data, err := common.Marshal(fields)
+		if err != nil {
+			return nil, err
+		}
+		if err := common.Unmarshal(data, &images); err != nil {
+			return nil, errors.Wrap(err, "invalid H3 image parameters")
+		}
+		first, last := strings.TrimSpace(images.FirstFrameURL), strings.TrimSpace(images.LastFrameURL)
+		if first == "" {
+			first = strings.TrimSpace(images.Metadata.FirstFrameURL)
+		}
+		if last == "" {
+			last = strings.TrimSpace(images.Metadata.LastFrameURL)
+		}
+		urls := images.Images
+		// Frame mode and reference-image mode are mutually exclusive in the
+		// playground. Preserve first/last ordering when frame URLs are supplied.
+		if first != "" || last != "" {
+			urls = []string{first, last}
+		}
+		references := make([]map[string]string, 0, len(urls))
+		for _, raw := range urls {
+			if url := strings.TrimSpace(raw); url != "" {
+				references = append(references, map[string]string{"image_url": url})
+			}
+		}
+		if len(references) > 0 {
+			fields["image_reference"] = references
+		}
+	}
 	if _, exists := fields["seconds"]; !exists {
 		if duration, ok := fields["duration"]; ok {
 			fields["seconds"] = duration
@@ -387,6 +471,18 @@ func (a *TaskAdaptor) ConvertToOpenAIVideo(task *model.Task) ([]byte, error) {
 	var err error
 	if data, err = sjson.SetBytes(data, "id", task.TaskID); err != nil {
 		return nil, errors.Wrap(err, "set id failed")
+	}
+	// Fetch converters are not initialized with RelayInfo. Resolve the task's
+	// channel so existing H3 tasks also expose their persisted upstream ID.
+	if task.ChannelId > 0 {
+		channel, channelErr := model.CacheGetChannel(task.ChannelId)
+		if channelErr == nil && channel.GetSetting().IsSoraH3(channel.Type) {
+			if upstreamID := task.GetUpstreamTaskID(); upstreamID != "" {
+				if data, err = sjson.SetBytes(data, "upstream_task_id", upstreamID); err != nil {
+					return nil, errors.Wrap(err, "set upstream task id failed")
+				}
+			}
+		}
 	}
 	// 状态以 task.Status 为准，避免 task.Data 过期导致下游状态不一致
 	if status := task.Status.ToVideoStatus(); status != "" {

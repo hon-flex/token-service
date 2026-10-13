@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import { showError, formatMessageForAPI, isValidMessage } from './utils';
 import { collectPlaygroundImageMediaUrls } from './playgroundImageUtils';
+import { buildH3Payload, isPlaygroundH3 } from './playgroundH3';
 import {
   applyVideoFrameMetadata,
   assertExclusiveVideoImagePayload,
@@ -124,6 +125,9 @@ export const buildApiPayload = (
     : inputs.model;
 
   if (isVideoMode) {
+    if (isPlaygroundH3(inputs)) {
+      return buildH3Payload(inputs, getLastUserPrompt(), modelWithRoute);
+    }
     const resolutionOptions = buildPlaygroundVideoResolutionOptions(
       inputs.selected_video_pricing_tiers,
     );

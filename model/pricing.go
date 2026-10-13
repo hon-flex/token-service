@@ -9,6 +9,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
+	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 	"github.com/QuantumNous/new-api/types"
 )
@@ -63,6 +64,8 @@ type PricingSupplierItem struct {
 // PricingChannelItem 某模型在各渠道上的定价摘要。
 type PricingChannelItem struct {
 	ChannelID             int    `json:"channel_id"`
+	ChannelType           int    `json:"channel_type"`
+	SoraVideoMode         string `json:"sora_video_mode,omitempty"`
 	SupplierApplicationID int    `json:"supplier_application_id"`
 	ChannelNo             string `json:"channel_no"`
 	SupplierAlias         string `json:"supplier_alias"`
@@ -407,8 +410,14 @@ func buildPricingAPIItemsAt(filtered []Pricing, visibleChannelIDs map[int]struct
 			if channelSlugMap != nil {
 				routeSlug = channelSlugMap[row.ChannelID]
 			}
+			var channelSetting dto.ChannelSettings
+			if row.ChannelSetting != "" {
+				_ = common.UnmarshalJsonStr(row.ChannelSetting, &channelSetting)
+			}
 			chItem := PricingChannelItem{
 				ChannelID:               row.ChannelID,
+				ChannelType:             row.ChannelType,
+				SoraVideoMode:           channelSetting.SoraVideoMode,
 				SupplierApplicationID:   row.SupplierApplicationID,
 				ChannelNo:               row.ChannelNo,
 				SupplierAlias:           alias,

@@ -12,6 +12,9 @@ import (
 )
 
 func SetApiRouter(router *gin.Engine) {
+	// File bytes bypass JSON gzip middleware to preserve Content-Length and Range.
+	router.GET("/api/storage/files/:id/content", controller.StoredS3FileContent)
+	router.HEAD("/api/storage/files/:id/content", controller.StoredS3FileContent)
 	apiRouter := router.Group("/api")
 	apiRouter.Use(middleware.RouteTag("api"))
 	apiRouter.Use(gzip.Gzip(gzip.DefaultCompression))
@@ -151,6 +154,14 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.POST("/verify", middleware.UserAuth(), middleware.CriticalRateLimit(), controller.UniversalVerify)
 
 		// 通用文件上传与超级管理员文件管理。
+		apiRouter.GET("/storage/s3", middleware.RootAuth(), controller.GetS3StorageSettings)
+		apiRouter.PUT("/storage/s3", middleware.RootAuth(), controller.UpdateS3StorageSettings)
+		apiRouter.POST("/storage/s3/test", middleware.RootAuth(), middleware.CriticalRateLimit(), controller.TestS3Storage)
+		// Compatibility aliases for already deployed clients.
+		apiRouter.GET("/storage/playground", middleware.RootAuth(), controller.GetS3StorageSettings)
+		apiRouter.PUT("/storage/playground", middleware.RootAuth(), controller.UpdateS3StorageSettings)
+		apiRouter.POST("/storage/playground/test", middleware.RootAuth(), middleware.CriticalRateLimit(), controller.TestS3Storage)
+		apiRouter.POST("/storage/files/:id/url", middleware.UserAuth(), controller.RefreshS3UploadURL)
 		apiRouter.POST("/oss/upload", middleware.UserAuth(), middleware.UploadRateLimit(), controller.OssUpload)
 		apiRouter.GET("/oss/files", middleware.RootAuth(), controller.ListUploadFiles)
 		apiRouter.POST("/oss/files/sync", middleware.RootAuth(), controller.SyncUploadFiles)

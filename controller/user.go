@@ -1214,6 +1214,7 @@ func GetUserModels(c *gin.Context) {
 			RouteSlug         string                       `json:"route_slug,omitempty"`
 			SupplierType      string                       `json:"supplier_type,omitempty"`
 			ChannelType       int                          `json:"channel_type,omitempty"`
+			SoraVideoMode     string                       `json:"sora_video_mode,omitempty"`
 			VideoPricingTiers []playgroundVideoPricingTier `json:"video_pricing_tiers,omitempty"`
 		}
 		type playgroundModelItem struct {
@@ -1425,12 +1426,13 @@ func GetUserModels(c *gin.Context) {
 					continue
 				}
 				channelMeta[channelID] = playgroundChannelOption{
-					ID:           ch.Id,
-					Name:         strings.TrimSpace(ch.Name),
-					ChannelNo:    strings.TrimSpace(ch.ChannelNo),
-					RouteSlug:    strings.TrimSpace(ch.RouteSlug),
-					SupplierType: strings.TrimSpace(ch.SupplierType),
-					ChannelType:  ch.Type,
+					ID:            ch.Id,
+					Name:          strings.TrimSpace(ch.Name),
+					ChannelNo:     strings.TrimSpace(ch.ChannelNo),
+					RouteSlug:     strings.TrimSpace(ch.RouteSlug),
+					SupplierType:  strings.TrimSpace(ch.SupplierType),
+					ChannelType:   ch.Type,
+					SoraVideoMode: ch.GetSetting().SoraVideoMode,
 				}
 			}
 		}

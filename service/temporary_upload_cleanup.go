@@ -125,6 +125,21 @@ func deleteStoredObject(storageType, objectKey, storageBase, endpoint, bucket st
 	switch storageType {
 	case operation_setting.StorageTypeLocal:
 		return deleteLocalStoredObject(storageBase, objectKey)
+	case operation_setting.StorageTypeS3:
+		cfg, err := operation_setting.GetS3Config()
+		if err != nil {
+			return err
+		}
+		p, err := cfg.Profile(storageBase)
+		if err != nil {
+			return err
+		}
+		if p.Endpoint != endpoint || p.Bucket != bucket || objectKey == "" {
+			return fmt.Errorf("S3 文件存储身份不匹配")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		return deleteS3Object(ctx, p, objectKey)
 	case operation_setting.StorageTypeOSS:
 		return ossDeleteObject(endpoint, bucket, objectKey)
 	default:

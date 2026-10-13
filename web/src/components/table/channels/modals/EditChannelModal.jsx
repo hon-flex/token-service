@@ -286,6 +286,7 @@ const EditChannelModal = (props) => {
     tag: '',
     multi_key_mode: 'random',
     // 渠道额外设置的默认值
+    sora_video_mode: 'sora',
     force_format: false,
     thinking_to_content: false,
     proxy: '',
@@ -601,6 +602,7 @@ const EditChannelModal = (props) => {
 
   // 渠道额外设置状态
   const [channelSettings, setChannelSettings] = useState({
+    sora_video_mode: 'sora',
     force_format: false,
     thinking_to_content: false,
     proxy: '',
@@ -1170,9 +1172,12 @@ const EditChannelModal = (props) => {
         setMultiToSingle(false);
       }
       // 解析渠道额外设置并合并到data中
+      data.sora_video_mode = 'sora';
       if (data.setting) {
         try {
           const parsedSettings = JSON.parse(data.setting);
+          data.sora_video_mode =
+            parsedSettings.sora_video_mode === 'h3' ? 'h3' : 'sora';
           data.force_format = parsedSettings.force_format || false;
           data.thinking_to_content =
             parsedSettings.thinking_to_content || false;
@@ -1369,6 +1374,7 @@ const EditChannelModal = (props) => {
       setBasicModels(getChannelModels(data.type));
       // 同步更新channelSettings状态显示
       setChannelSettings({
+        sora_video_mode: data.sora_video_mode,
         force_format: data.force_format,
         thinking_to_content: data.thinking_to_content,
         proxy: data.proxy,
@@ -1788,6 +1794,7 @@ const EditChannelModal = (props) => {
     formApiRef.current?.reset();
     // 重置渠道设置状态
     setChannelSettings({
+      sora_video_mode: 'sora',
       force_format: false,
       thinking_to_content: false,
       proxy: '',
@@ -2360,6 +2367,10 @@ const EditChannelModal = (props) => {
 
     // 生成渠道额外设置JSON
     const channelExtraSettings = {
+      sora_video_mode:
+        localInputs.type === 55 && localInputs.sora_video_mode === 'h3'
+          ? 'h3'
+          : undefined,
       force_format: localInputs.force_format || false,
       thinking_to_content: localInputs.thinking_to_content || false,
       proxy: localInputs.proxy || '',
@@ -2476,6 +2487,7 @@ const EditChannelModal = (props) => {
 
     // 清理不需要发送到后端的字段
     delete localInputs.force_format;
+    delete localInputs.sora_video_mode;
     delete localInputs.thinking_to_content;
     delete localInputs.proxy;
     delete localInputs.pass_through_body_enabled;
@@ -3823,6 +3835,28 @@ const EditChannelModal = (props) => {
                         onChange={(value) => handleInputChange('type', value)}
                         disabled={isIonetLocked}
                       />
+
+                      {inputs.type === 55 && (
+                        <Form.Select
+                          field='sora_video_mode'
+                          label={t('视频协议')}
+                          initValue={inputs.sora_video_mode || 'sora'}
+                          optionList={[
+                            { label: t('标准 Sora（默认）'), value: 'sora' },
+                            { label: 'H3', value: 'h3' },
+                          ]}
+                          style={{ width: '100%' }}
+                          onChange={(value) =>
+                            handleChannelSettingsChange(
+                              'sora_video_mode',
+                              value,
+                            )
+                          }
+                          extraText={t(
+                            '选择 H3 后，本渠道内所有模型使用 H3 视频协议，不依赖模型名称。请将不同协议的模型放在不同渠道。',
+                          )}
+                        />
+                      )}
 
                       {inputs.type === 57 && (
                         <Banner

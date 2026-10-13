@@ -15,6 +15,12 @@ import {
   PLAYGROUND_VIDEO_IMAGE_TABS,
 } from '../constants/playground.constants';
 import { splitAssetUris } from './materialAssetUtils';
+import {
+  getH3ImageUrls,
+  getH3ChannelError,
+  isPlaygroundH3,
+  validateH3Inputs,
+} from './playgroundH3';
 
 export function isVideoURL(url) {
   return /\.(mp4|mov|avi|mkv|webm)(\?.*)?$/i.test(String(url || '').trim());
@@ -104,6 +110,7 @@ export function getActiveVideoImageMaxCount(inputs) {
 export function getPlaygroundSidebarImageUrls(inputs) {
   const mode = inputs?.display_mode || 'text';
   if (mode === 'video') {
+    if (isPlaygroundH3(inputs)) return getH3ImageUrls(inputs);
     return getActiveVideoImageUrls(inputs);
   }
   return inputs?.imageUrls || [''];
@@ -267,6 +274,9 @@ export function assertExclusiveVideoImagePayload(payload) {
 }
 
 export function validatePlaygroundVideoImageParams(inputs) {
+  const channelError = getH3ChannelError(inputs);
+  if (channelError) return { ok: false, message: channelError };
+  if (isPlaygroundH3(inputs)) return validateH3Inputs(inputs);
   const frameImages = collectFilledImageUrls(inputs?.frameImageUrls);
   if (frameImages.length > PLAYGROUND_VIDEO_FRAME_MAX_COUNT) {
     return {
